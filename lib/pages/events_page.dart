@@ -5,6 +5,22 @@ import 'package:crc_app/styles.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
+import 'package:http/http.dart';
+import 'package:crc_app/Api/api.dart';
+
+//if u cange the start time and end time of the day, change it in slandar and in the generate start times function too
+void main() {
+  runApp(MaterialApp(
+    theme: ThemeData(
+      fontFamily: 'OpenSans',
+    ),
+    debugShowCheckedModeBanner: false,
+    home: EventsPage(
+      floorNumber: 1,
+      roomNumber: 2,
+    ),
+  ));
+}
 
 class EventsPage extends StatefulWidget {
   final floorNumber;
@@ -20,34 +36,41 @@ class _EventsPageState extends State<EventsPage> {
   //database related
   List<Map<String, dynamic>> eventDataList = [
     {
+      "id": "1234",
+      "eventName": "Axis",
+      "organiserName": "Tarun",
+      "mobileNumber": "8074465290",
+      "eventDate": "2024-11-18",
+      "startTime": "8",
+      "endTime": "11",
+      "status": "free" //3 types booked, inUse,free
+    },
+    {
+      "id": "5678",
       "eventName": "Aarohi",
+      "organiserName": "vaibhav",
+      "mobileNumber": "9854783912",
+      "eventDate": "2024-11-18",
+      "startTime": "12",
+      "endTime": "14",
+      "status": "inUse" //3 types booked, inUse,free
+    },
+    {
+      "id": "9112",
+      "eventName": "IDS",
       "organiserName": "Hrushikesh",
       "mobileNumber": "9347808844",
-      "eventDate": ""
+      "eventDate": "2024-11-18",
+      "startTime": "16",
+      "endTime": "18",
+      "status": "booked" //3 types booked, inUse,free
     }
   ];
   bool isLoading = false;
 
   //database related
 
-  // test data
-  List<Event> testDisplayEvents = [
-    Event(
-        title: "Ids",
-        startTime: DateTime(2024, 11, 15, 14),
-        endTime: DateTime(2024, 11, 15, 15),
-        color: Colors.redAccent),
-    Event(
-        title: "Axis",
-        startTime: DateTime(2024, 11, 15, 10),
-        endTime: DateTime(2024, 11, 15, 12),
-        color: Colors.orangeAccent)
-  ];
-  //test data
-
   DateTime currentDate = DateTime.now();
-  // DateTime? startOfMonth;
-  // DateTime? endOfMonth;
   //have declared this variables in updatemap function
   Map<int, String> currentMonthDatesMap = {};
   //scroll controller for dates
@@ -84,7 +107,8 @@ class _EventsPageState extends State<EventsPage> {
     super.initState();
     updateDateMap();
     // animateScroller();
-    // loadData();
+    isLoading = true;
+    loadData();
   }
 
   @override
@@ -99,6 +123,21 @@ class _EventsPageState extends State<EventsPage> {
     double deviceHeight = MediaQuery.of(context).size.height;
     double appBarHeight = AppBar().preferredSize.height;
     double boxPadding = deviceWidth * 0.05;
+
+    List<Map<String, DateTime>> currentEventTimes = [];
+
+    for (var event in eventDataList) {
+      DateTime eventDate = DateTime.parse(event["eventDate"]);
+      int startTime = int.parse(event["startTime"]);
+      int endTime = int.parse(event["endTime"]);
+      currentEventTimes.add({
+        'startTime':
+            DateTime(eventDate.year, eventDate.month, eventDate.day, startTime),
+        'endTime':
+            DateTime(eventDate.year, eventDate.month, eventDate.day, endTime),
+      });
+    }
+
     return Scaffold(
       backgroundColor: prussianBlue,
       appBar: AppBar(
@@ -206,7 +245,7 @@ class _EventsPageState extends State<EventsPage> {
               Expanded(
                 child: CalandarWidget(
                   currentDate: currentDate,
-                  events: testDisplayEvents,
+                  eventsMap: eventDataList,
                 ),
               )
           ],
@@ -219,9 +258,11 @@ class _EventsPageState extends State<EventsPage> {
               isScrollControlled: true,
               builder: (BuildContext context) {
                 return AddEventPage(
-                    eventDate: currentDate,
-                    floorNumber: widget.floorNumber,
-                    roomNumber: widget.roomNumber);
+                  eventDate: currentDate,
+                  floorNumber: widget.floorNumber,
+                  roomNumber: widget.roomNumber,
+                  currentEventTimes: currentEventTimes,
+                );
               });
           loadData();
         },
@@ -282,39 +323,26 @@ class _EventsPageState extends State<EventsPage> {
     );
   }
 
-  Future<void> loadData() async {
+  void loadData() async {
+    if (kDebugMode) {
+      print("loading data");
+    }
     // get the data here then setstate
+    // try {
+    //   if (kDebugMode) {
+    //     List<dynamic>? data = await ApiService().getData(
+    //         "${widget.floorNumber}-${widget.roomNumber}", "2024-11-01");
+    //     if (data != null) {
+    //       print(data);
+    //     }
+    //   }
+    // } catch (e) {
+    //   if (kDebugMode) {
+    //     print(e);
+    //   }
+    // }
     setState(() {
-      if (kDebugMode) {
-        print("loading data");
-      }
       isLoading = false;
     });
-  }
-}
-
-class Event {
-  //test
-  final String title;
-  final DateTime startTime;
-  final DateTime endTime;
-  final Color color;
-  Event(
-      {required this.title,
-      required this.startTime,
-      required this.endTime,
-      required this.color});
-}
-
-class EventDataSource extends CalendarDataSource {
-  EventDataSource(List<Event> events) {
-    appointments = events.map((event) {
-      return Appointment(
-        startTime: event.startTime,
-        endTime: event.endTime,
-        subject: event.title,
-        color: event.color, // Customize color as needed
-      );
-    }).toList();
   }
 }
