@@ -1,9 +1,12 @@
 // import 'package:crc_app/pages/rooms.dart';
 import 'package:crc_app/CustomWidgets/floor_classroom_widget.dart';
+import 'package:crc_app/main.dart';
 import 'package:crc_app/pages/choose_user_page.dart';
+import 'package:crc_app/userStatusProvider/user_status_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:crc_app/styles.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class FloorsPage extends StatefulWidget {
@@ -16,14 +19,18 @@ class FloorsPage extends StatefulWidget {
 }
 
 class _FloorsPageState extends State<FloorsPage> {
-  String? user;
+  bool? isAdmin;
+
   bool? loadFloors;
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    loadFloors = false;
-    getUserType();
+    loadFloors = true;
+    final provider =
+        navigatorKey.currentState!.context.read<UserStatusProvider>();
+    isAdmin = provider.isAdmin;
+    // getUserType();
   }
 
   @override
@@ -58,8 +65,12 @@ class _FloorsPageState extends State<FloorsPage> {
                 child: IconButton(
                     onPressed: () async {
                       final prefs = await SharedPreferences.getInstance();
-                      await prefs
-                          .remove('User'); // Removes the stored 'username'
+                      await prefs.remove('isAdmin');
+                      if (mounted && navigatorKey.currentState != null) {
+                        final provider = navigatorKey.currentState!.context
+                            .read<UserStatusProvider>();
+                        provider.updateAdminStatus(false);
+                      } // sets _isAdmin to false
                       Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
@@ -79,44 +90,53 @@ class _FloorsPageState extends State<FloorsPage> {
                     borderRadius: const BorderRadius.only(
                         topLeft: Radius.circular(20),
                         topRight: Radius.circular(20))),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    user != null ? userWidget(user!) : Text("Unable to load"),
-                    FloorClassroomWidget(floorNumber: 1),
-                    FloorClassroomWidget(floorNumber: 2),
-                    FloorClassroomWidget(floorNumber: 3),
-                    FloorClassroomWidget(floorNumber: 4),
-                    FloorClassroomWidget(floorNumber: 5),
-                    FloorClassroomWidget(floorNumber: 6),
-                  ],
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    // mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      isAdmin != null
+                          ? userWidget(isAdmin!)
+                          : Text("Unable to load"),
+                      SizedBox(
+                        height: 5,
+                      ),
+                      FloorClassroomWidget(floorNumber: 1),
+                      FloorClassroomWidget(floorNumber: 2),
+                      FloorClassroomWidget(floorNumber: 3),
+                      FloorClassroomWidget(floorNumber: 4),
+                      FloorClassroomWidget(floorNumber: 5),
+                      FloorClassroomWidget(floorNumber: 6),
+                    ],
+                  ),
                 ),
               )
             : Text("unable to load"));
   }
 
-  Future<void> getUserType() async {
-    final prefs = await SharedPreferences.getInstance();
-    user = prefs.getString('User');
-    setState(() {
-      loadFloors = true;
-    });
-  }
+  // void getUserType() {
+  //   // final prefs = await SharedPreferences.getInstance();
+  //   // isAdmin = prefs.getBool('isAdmin');
+  //   isAdmin = Provider.of<UserStatusProvider>(context).isAdmin;
+  //   // isAdmin = true;
+  //   setState(() {
+  //     loadFloors = true;
+  //   });
+  // }
 }
 
-Widget userWidget(String user) {
+Widget userWidget(bool isAdmin) {
   return Row(
     children: [
       Icon(
-        user == "Admin" ? Icons.verified_user : Icons.group,
+        isAdmin ? Icons.verified_user : Icons.group,
         color: prussianBlue,
       ),
       SizedBox(
         width: 5,
       ),
       Text(
-        user,
+        isAdmin ? "Admin" : "Guest",
         style: TextStyle(
             color: prussianBlue, fontSize: 16, fontWeight: FontWeight.bold),
       )

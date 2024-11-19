@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  final String baseUrl = 'http://192.168.137.121:5500/booking';
+  final String baseUrl = 'http://172.25.109.204:5500/booking';
 
   // GET request
   Future<List<dynamic>?> getData(String roomName, String date) async {
@@ -40,11 +40,11 @@ class ApiService {
   Future<void> postData(Map<String, dynamic> body) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/create/data'),
+        Uri.parse('$baseUrl/create'),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode(body),
       );
-
+      print(response.body);
       if (response.statusCode == 201) {
         final data = jsonDecode(response.body);
         print("Response from API (POST): ${data['message']}");
@@ -59,7 +59,7 @@ class ApiService {
   // DELETE request
   Future<void> deleteData(String id) async {
     try {
-      final response = await http.delete(Uri.parse('$baseUrl/data/$id'));
+      final response = await http.delete(Uri.parse('$baseUrl/delete/$id'));
 
       if (response.statusCode == 200) {
         print("Successfully deleted item with id: $id");

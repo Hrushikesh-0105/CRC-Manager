@@ -1,25 +1,16 @@
+import 'package:crc_app/main.dart';
 import 'package:crc_app/pages/choose_user_page.dart';
 import 'package:crc_app/pages/floors_page.dart';
 import 'package:crc_app/styles.dart';
+import 'package:crc_app/userStatusProvider/user_status_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-void main() {
-  runApp(LoginApp());
-}
-
-class LoginApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: LoginPage(),
-    );
-  }
-}
-
 class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+
   @override
   _LoginPageState createState() => _LoginPageState();
 }
@@ -29,9 +20,14 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _mobileNumberController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  Future<void> setUser(String selectedUser) async {
+  Future<void> setUser(bool isAdmin) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('User', selectedUser);
+    await prefs.setBool('isAdmin', isAdmin);
+    if (mounted && navigatorKey.currentState != null) {
+      final provider =
+          navigatorKey.currentState!.context.read<UserStatusProvider>();
+      provider.updateAdminStatus(true);
+    }
   }
 
   Future<bool> _login() async {
@@ -60,7 +56,7 @@ class _LoginPageState extends State<LoginPage> {
       } else if (!correctPassword) {
         snakbarText = "Incorrect password";
       } else {
-        await setUser("Admin");
+        await setUser(true);
         loggedIn = true; //setting the user as admin
       }
       if (mounted && !loggedIn) {
@@ -178,6 +174,7 @@ class _LoginPageState extends State<LoginPage> {
                         onPressed: () async {
                           bool isUserLoggedIn = await _login();
                           if (isUserLoggedIn) {
+                            //updating provide
                             Navigator.pushReplacement(
                                 context,
                                 MaterialPageRoute(

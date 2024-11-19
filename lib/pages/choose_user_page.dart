@@ -1,24 +1,18 @@
+import 'package:crc_app/main.dart';
 import 'package:crc_app/pages/floors_page.dart';
 import 'package:crc_app/pages/login_page.dart';
 import 'package:crc_app/styles.dart';
+import 'package:crc_app/userStatusProvider/user_status_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-void main() {
-  runApp(CRCManagerApp());
-}
-
-class CRCManagerApp extends StatelessWidget {
+class ChooseUserPage extends StatefulWidget {
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: ChooseUserPage(),
-    );
-  }
+  State<ChooseUserPage> createState() => _ChooseUserPageState();
 }
 
-class ChooseUserPage extends StatelessWidget {
+class _ChooseUserPageState extends State<ChooseUserPage> {
   @override
   Widget build(BuildContext context) {
     double deviceWidth = MediaQuery.of(context).size.width;
@@ -80,7 +74,8 @@ class ChooseUserPage extends StatelessWidget {
                   ),
                   InkWell(
                       onTap: () async {
-                        await setUser("Guest");
+                        await setUser(false);
+
                         Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
@@ -97,9 +92,15 @@ class ChooseUserPage extends StatelessWidget {
     );
   }
 
-  Future<void> setUser(String selectedUser) async {
+  Future<void> setUser(bool isAdmin) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('User', selectedUser);
+    await prefs.setBool('isAdmin', isAdmin);
+    if (mounted && navigatorKey.currentState != null) {
+      final provider =
+          navigatorKey.currentState!.context.read<UserStatusProvider>();
+      provider.updateAdminStatus(isAdmin);
+      debugPrint("User: ${provider.isAdmin}"); //Todo remove this
+    }
   }
 }
 

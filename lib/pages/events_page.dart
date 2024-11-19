@@ -1,26 +1,29 @@
 import 'package:crc_app/CustomWidgets/calandar_widget.dart';
 import 'package:crc_app/CustomWidgets/datesWidget.dart';
+import 'package:crc_app/main.dart';
 import 'package:crc_app/pages/add_event_page.dart';
 import 'package:crc_app/styles.dart';
+import 'package:crc_app/userStatusProvider/user_status_provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 import 'package:http/http.dart';
 import 'package:crc_app/Api/api.dart';
 
 //if u cange the start time and end time of the day, change it in slandar and in the generate start times function too
-void main() {
-  runApp(MaterialApp(
-    theme: ThemeData(
-      fontFamily: 'OpenSans',
-    ),
-    debugShowCheckedModeBanner: false,
-    home: EventsPage(
-      floorNumber: 1,
-      roomNumber: 2,
-    ),
-  ));
-}
+// void main() {
+//   runApp(MaterialApp(
+//     theme: ThemeData(
+//       fontFamily: 'OpenSans',
+//     ),
+//     debugShowCheckedModeBanner: false,
+//     home: EventsPage(
+//       floorNumber: 1,
+//       roomNumber: 2,
+//     ),
+//   ));
+// }
 
 class EventsPage extends StatefulWidget {
   final floorNumber;
@@ -33,6 +36,7 @@ class EventsPage extends StatefulWidget {
 }
 
 class _EventsPageState extends State<EventsPage> {
+  bool? isAdmin;
   //database related
   List<Map<String, dynamic>> eventDataList = [
     {
@@ -40,7 +44,7 @@ class _EventsPageState extends State<EventsPage> {
       "eventName": "Axis",
       "organiserName": "Tarun",
       "mobileNumber": "8074465290",
-      "eventDate": "2024-11-18",
+      "eventDate": "2024-11-19",
       "startTime": "8",
       "endTime": "11",
       "status": "free" //3 types booked, inUse,free
@@ -50,7 +54,7 @@ class _EventsPageState extends State<EventsPage> {
       "eventName": "Aarohi",
       "organiserName": "vaibhav",
       "mobileNumber": "9854783912",
-      "eventDate": "2024-11-18",
+      "eventDate": "2024-11-19",
       "startTime": "12",
       "endTime": "14",
       "status": "inUse" //3 types booked, inUse,free
@@ -60,7 +64,7 @@ class _EventsPageState extends State<EventsPage> {
       "eventName": "IDS",
       "organiserName": "Hrushikesh",
       "mobileNumber": "9347808844",
-      "eventDate": "2024-11-18",
+      "eventDate": "2024-11-19",
       "startTime": "16",
       "endTime": "18",
       "status": "booked" //3 types booked, inUse,free
@@ -107,6 +111,9 @@ class _EventsPageState extends State<EventsPage> {
     super.initState();
     updateDateMap();
     // animateScroller();
+    final provider =
+        navigatorKey.currentState!.context.read<UserStatusProvider>();
+    isAdmin = provider.isAdmin;
     isLoading = true;
     loadData();
   }
@@ -241,6 +248,10 @@ class _EventsPageState extends State<EventsPage> {
             const SizedBox(
               height: 10,
             ),
+
+            const SizedBox(
+              height: 10,
+            ),
             if (!isLoading)
               Expanded(
                 child: CalandarWidget(
@@ -251,28 +262,31 @@ class _EventsPageState extends State<EventsPage> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          await showModalBottomSheet(
-              context: context,
-              isScrollControlled: true,
-              builder: (BuildContext context) {
-                return AddEventPage(
-                  eventDate: currentDate,
-                  floorNumber: widget.floorNumber,
-                  roomNumber: widget.roomNumber,
-                  currentEventTimes: currentEventTimes,
-                );
-              });
-          loadData();
-        },
-        backgroundColor: prussianBlue,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(50), // Set the corner radius
-        ),
-        child: Icon(
-          Icons.add,
-          color: backgroundColor,
+      floatingActionButton: Visibility(
+        visible: isAdmin!,
+        child: FloatingActionButton(
+          onPressed: () async {
+            await showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                builder: (BuildContext context) {
+                  return AddEventPage(
+                    eventDate: currentDate,
+                    floorNumber: widget.floorNumber,
+                    roomNumber: widget.roomNumber,
+                    currentEventTimes: currentEventTimes,
+                  );
+                });
+            loadData();
+          },
+          backgroundColor: prussianBlue,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(50), // Set the corner radius
+          ),
+          child: Icon(
+            Icons.add,
+            color: backgroundColor,
+          ),
         ),
       ),
     );
@@ -328,19 +342,19 @@ class _EventsPageState extends State<EventsPage> {
       print("loading data");
     }
     // get the data here then setstate
-    // try {
-    //   if (kDebugMode) {
-    //     List<dynamic>? data = await ApiService().getData(
-    //         "${widget.floorNumber}-${widget.roomNumber}", "2024-11-01");
-    //     if (data != null) {
-    //       print(data);
-    //     }
-    //   }
-    // } catch (e) {
-    //   if (kDebugMode) {
-    //     print(e);
-    //   }
-    // }
+    try {
+      if (kDebugMode) {
+        List<dynamic>? data = await ApiService().getData(
+            "${widget.floorNumber}-${widget.roomNumber}", "2024-11-01");
+        if (data != null) {
+          print(data);
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print(e);
+      }
+    }
     setState(() {
       isLoading = false;
     });

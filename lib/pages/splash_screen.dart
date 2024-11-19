@@ -1,11 +1,14 @@
 import 'package:animated_splash_screen/animated_splash_screen.dart';
+import 'package:crc_app/main.dart';
 
 import 'package:crc_app/pages/choose_user_page.dart';
 import 'package:crc_app/pages/floors_page.dart';
 import 'package:crc_app/styles.dart';
+import 'package:crc_app/userStatusProvider/user_status_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -70,8 +73,16 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> _checkPreferences() async {
     final prefs = await SharedPreferences.getInstance();
     final bool hasValue =
-        prefs.containsKey('User'); // Replace 'yourKey' with the actual key
-
+        prefs.containsKey('isAdmin'); // Replace 'yourKey' with the actual key
+    if (hasValue && mounted && navigatorKey.currentState != null) {
+      final provider =
+          navigatorKey.currentState!.context.read<UserStatusProvider>();
+      if (prefs.getBool('isAdmin') == true) {
+        provider.updateAdminStatus(true);
+      } else {
+        provider.updateAdminStatus(false);
+      }
+    }
     // Update the next screen based on whether the value exists
     setState(() {
       nextScreenToNavigate = hasValue ? FloorsPage() : ChooseUserPage();

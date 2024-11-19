@@ -399,16 +399,16 @@ class _AddEventPageState extends State<AddEventPage> {
       int selectedRoom = widget.roomNumber;
 
       Map<String, dynamic> eventMap = {
-        "eventName": eventNameString,
-        "organiserName": organiserNameString,
-        "mobileNumber": mobileNumberString,
-        "eventDate": eventDateString,
-        "startTime": startTimeString,
-        "endTime": endTimeString,
-        "roomName": "$selectedFloor-$selectedRoom",
-        "status": false,
+        // "eventName": eventNameString,
+        "Guest": organiserNameString,
+        // "mobileNumber": mobileNumberString,
+        "Date": eventDateString,
+        "BookedFrom": startTimeString,
+        "BookedTill": endTimeString,
+        "RoomName": "$selectedFloor-$selectedRoom",
+        "Status": "Booked",
       };
-
+      print(eventMap);
       // var connectivityResult = await Connectivity().checkConnectivity();
 
       // print("connectivity: ${connectivityResult == ConnectivityResult.mobile}");
@@ -427,15 +427,16 @@ class _AddEventPageState extends State<AddEventPage> {
       //   }
       //   eventCreated = false;
       // }
-
+      print("sending");
       //TODO send data here
-      // try {
-      //   ApiService().postData(eventMap);
-      // } catch (e) {
-      //   if (kDebugMode) {
-      //     print(e);
-      //   }
-      // }
+      try {
+        ApiService().postData(eventMap);
+        print("data sent");
+      } catch (e) {
+        if (kDebugMode) {
+          print(e);
+        }
+      }
     }
     return false;
   }
