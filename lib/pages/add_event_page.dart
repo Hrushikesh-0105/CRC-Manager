@@ -1,7 +1,10 @@
 import 'dart:developer';
+import 'dart:math';
 import 'package:crc_app/Api/api.dart';
 import 'package:crc_app/CustomWidgets/floor_classroom_widget.dart';
+import 'package:crc_app/main.dart';
 import 'package:crc_app/pages/events_page.dart';
+import 'package:crc_app/userStatusProvider/user_and_event_provider.dart';
 // import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:http/http.dart';
 // import 'package:crc_app/pages/thirdPage.dart';
@@ -9,6 +12,7 @@ import 'package:crc_app/styles.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 
 class AddEventPage extends StatefulWidget {
   final floorNumber;
@@ -295,45 +299,53 @@ class _AddEventPageState extends State<AddEventPage> {
 
   List<DateTime> generatePossibleStartTimes(
       List<Map<String, DateTime>> eventTimes) {
-    // Define the event window: 8:00 AM to 8:00 PM
+    List<DateTime> StartTimes = [];
     DateTime eventDate = widget.eventDate;
-
-    eventTimes.sort((a, b) => a['startTime']!.compareTo(b['startTime']!));
-    print(eventTimes);
-
-    List<DateTime> totalStartTimes = [];
-    for (int i = 8; i <= 19; i++) {
-      totalStartTimes
-          .add(DateTime(eventDate.year, eventDate.month, eventDate.day, i));
-    }
-    //merging the event times
-    int mergeIndex = 0;
-    int eventTimesLength = eventTimes.length;
-    while (mergeIndex != eventTimesLength - 1) {
-      if (eventTimes[mergeIndex]["endTime"]!
-          .isAtSameMomentAs(eventTimes[mergeIndex + 1]["startTime"]!)) {
-        eventTimes[mergeIndex]["endTime"] =
-            eventTimes[mergeIndex + 1]["endTime"]!;
-        eventTimes.removeAt(mergeIndex + 1);
-        eventTimesLength = eventTimesLength - 1;
-      } else {
-        mergeIndex = mergeIndex + 1;
+    if (eventTimes.isEmpty) {
+      for (int i = 8; i <= 19; i++) {
+        StartTimes.add(
+            DateTime(eventDate.year, eventDate.month, eventDate.day, i));
       }
     }
-    print(eventTimes);
-    List<DateTime> StartTimes = [];
-    int eventPointer = 0;
-    //checking  event times
-    for (int i = 0; i < 12; i++) {
-      if (eventPointer >= eventTimesLength) {
-        StartTimes.add(totalStartTimes[i]);
-      } else if (totalStartTimes[i]
-          .isBefore(eventTimes[eventPointer]["startTime"]!)) {
-        StartTimes.add(totalStartTimes[i]);
-      } else if (totalStartTimes[i] == eventTimes[eventPointer]["endTime"]! ||
-          totalStartTimes[i].isAfter(eventTimes[eventPointer]["endTime"]!)) {
-        StartTimes.add(totalStartTimes[i]);
-        eventPointer++;
+    // Define the event window: 8:00 AM to 8:00 PM
+    else {
+      eventTimes.sort((a, b) => a['startTime']!.compareTo(b['startTime']!));
+      print(eventTimes);
+
+      List<DateTime> totalStartTimes = [];
+      for (int i = 8; i <= 19; i++) {
+        totalStartTimes
+            .add(DateTime(eventDate.year, eventDate.month, eventDate.day, i));
+      }
+      //merging the event times
+      int mergeIndex = 0;
+      int eventTimesLength = eventTimes.length;
+      while (mergeIndex != eventTimesLength - 1) {
+        if (eventTimes[mergeIndex]["endTime"]!
+            .isAtSameMomentAs(eventTimes[mergeIndex + 1]["startTime"]!)) {
+          eventTimes[mergeIndex]["endTime"] =
+              eventTimes[mergeIndex + 1]["endTime"]!;
+          eventTimes.removeAt(mergeIndex + 1);
+          eventTimesLength = eventTimesLength - 1;
+        } else {
+          mergeIndex = mergeIndex + 1;
+        }
+      }
+      print(eventTimes);
+
+      int eventPointer = 0;
+      //checking  event times
+      for (int i = 0; i < 12; i++) {
+        if (eventPointer >= eventTimesLength) {
+          StartTimes.add(totalStartTimes[i]);
+        } else if (totalStartTimes[i]
+            .isBefore(eventTimes[eventPointer]["startTime"]!)) {
+          StartTimes.add(totalStartTimes[i]);
+        } else if (totalStartTimes[i] == eventTimes[eventPointer]["endTime"]! ||
+            totalStartTimes[i].isAfter(eventTimes[eventPointer]["endTime"]!)) {
+          StartTimes.add(totalStartTimes[i]);
+          eventPointer++;
+        }
       }
     }
     print(StartTimes);
@@ -343,51 +355,58 @@ class _AddEventPageState extends State<AddEventPage> {
   List<DateTime> generatePossibleEndTimes(
       DateTime selectedStartTime, List<Map<String, DateTime>> eventTimes) {
     // DateTime eventDate = widget.eventDate;
-
-    eventTimes.sort((a, b) => a['startTime']!.compareTo(b['startTime']!));
-    // print(eventTimes);
-
-    //merging the event times
-    int mergeIndex = 0;
-    int eventTimesLength = eventTimes.length;
-    while (mergeIndex != eventTimesLength - 1) {
-      if (eventTimes[mergeIndex]["endTime"]!
-          .isAtSameMomentAs(eventTimes[mergeIndex + 1]["startTime"]!)) {
-        eventTimes[mergeIndex]["endTime"] =
-            eventTimes[mergeIndex + 1]["endTime"]!;
-        eventTimes.removeAt(mergeIndex + 1);
-        eventTimesLength = eventTimesLength - 1;
-      } else {
-        mergeIndex = mergeIndex + 1;
-      }
-    }
-    if (kDebugMode) {
-      print(eventTimes);
-    }
     List<DateTime> EndTimes = [];
-    DateTime? lastEndTime;
-
-    bool endTimeFound = false;
-    for (int i = 0; i < eventTimesLength && !endTimeFound; i++) {
-      if (selectedStartTime.isBefore(eventTimes[i]["startTime"]!)) {
-        lastEndTime = eventTimes[i]["startTime"]!;
-        endTimeFound = true;
+    if (eventTimes.isEmpty) {
+      for (int i = selectedStartTime.hour + 1; i <= 20; i++) {
+        EndTimes.add(DateTime(selectedStartTime.year, selectedStartTime.month,
+            selectedStartTime.day, i));
       }
-    }
-    if (!endTimeFound) {
-      lastEndTime = DateTime(selectedStartTime.year, selectedStartTime.month,
-          selectedStartTime.day, 20); //last end time is 8 pm==20
-    }
-    for (int i = selectedStartTime.hour + 1; i <= lastEndTime!.hour; i++) {
-      EndTimes.add(DateTime(selectedStartTime.year, selectedStartTime.month,
-          selectedStartTime.day, i));
+    } else {
+      eventTimes.sort((a, b) => a['startTime']!.compareTo(b['startTime']!));
+      // print(eventTimes);
+
+      //merging the event times
+      int mergeIndex = 0;
+      int eventTimesLength = eventTimes.length;
+      while (mergeIndex != eventTimesLength - 1) {
+        if (eventTimes[mergeIndex]["endTime"]!
+            .isAtSameMomentAs(eventTimes[mergeIndex + 1]["startTime"]!)) {
+          eventTimes[mergeIndex]["endTime"] =
+              eventTimes[mergeIndex + 1]["endTime"]!;
+          eventTimes.removeAt(mergeIndex + 1);
+          eventTimesLength = eventTimesLength - 1;
+        } else {
+          mergeIndex = mergeIndex + 1;
+        }
+      }
+      if (kDebugMode) {
+        print(eventTimes);
+      }
+
+      DateTime? lastEndTime;
+
+      bool endTimeFound = false;
+      for (int i = 0; i < eventTimesLength && !endTimeFound; i++) {
+        if (selectedStartTime.isBefore(eventTimes[i]["startTime"]!)) {
+          lastEndTime = eventTimes[i]["startTime"]!;
+          endTimeFound = true;
+        }
+      }
+      if (!endTimeFound) {
+        lastEndTime = DateTime(selectedStartTime.year, selectedStartTime.month,
+            selectedStartTime.day, 20); //last end time is 8 pm==20
+      }
+      for (int i = selectedStartTime.hour + 1; i <= lastEndTime!.hour; i++) {
+        EndTimes.add(DateTime(selectedStartTime.year, selectedStartTime.month,
+            selectedStartTime.day, i));
+      }
     }
     return EndTimes;
   }
 
   Future<bool> _createEvent() async {
     bool eventCreated = false;
-    print("entered function");
+    print("entered create Event function");
     if (_formKey.currentState!.validate()) {
       String eventDateString = widget.eventDate.toString();
       String startTimeString = _selectedStartTime.toString();
@@ -398,17 +417,34 @@ class _AddEventPageState extends State<AddEventPage> {
       int selectedFloor = widget.floorNumber;
       int selectedRoom = widget.roomNumber;
 
+      //TODO remove this random id
+      final random = Random();
+      int randomFourDigitNumber = 1000 + random.nextInt(9000);
+
       Map<String, dynamic> eventMap = {
-        // "eventName": eventNameString,
-        "Guest": organiserNameString,
-        // "mobileNumber": mobileNumberString,
-        "Date": eventDateString,
-        "BookedFrom": startTimeString,
-        "BookedTill": endTimeString,
+        "id": "$randomFourDigitNumber",
+        "eventName": eventNameString,
+        "organiserName": organiserNameString,
+        "mobileNumber": mobileNumberString,
+        "eventDate": eventDateString,
+        "startTime": startTimeString,
+        "endTime": endTimeString,
         "RoomName": "$selectedFloor-$selectedRoom",
-        "Status": "Booked",
+        "status": "Booked",
       };
       print(eventMap);
+      try {
+        //TODO create here
+        final provider =
+            navigatorKey.currentState!.context.read<UserStatusProvider>();
+        provider.addEventData(eventMap);
+        // print("events");
+        // print(provider.userEventData);
+        // print("End of add function");
+        eventCreated = true;
+      } catch (e) {
+        debugPrint("error: $e");
+      }
       // var connectivityResult = await Connectivity().checkConnectivity();
 
       // print("connectivity: ${connectivityResult == ConnectivityResult.mobile}");
@@ -427,17 +463,17 @@ class _AddEventPageState extends State<AddEventPage> {
       //   }
       //   eventCreated = false;
       // }
-      print("sending");
+      print("Event created: $eventCreated");
       //TODO send data here
-      try {
-        ApiService().postData(eventMap);
-        print("data sent");
-      } catch (e) {
-        if (kDebugMode) {
-          print(e);
-        }
-      }
+      // try {
+      //   ApiService().postData(eventMap);
+      //   print("data sent");
+      // } catch (e) {
+      //   if (kDebugMode) {
+      //     print(e);
+      //   }
+      // }
     }
-    return false;
+    return eventCreated;
   }
 }

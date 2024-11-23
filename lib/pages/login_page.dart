@@ -1,8 +1,10 @@
+import 'package:crc_app/Api/api.dart';
+import 'package:crc_app/CustomWidgets/snack_bar.dart';
 import 'package:crc_app/main.dart';
 import 'package:crc_app/pages/choose_user_page.dart';
 import 'package:crc_app/pages/floors_page.dart';
 import 'package:crc_app/styles.dart';
-import 'package:crc_app/userStatusProvider/user_status_provider.dart';
+import 'package:crc_app/userStatusProvider/user_and_event_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -19,57 +21,6 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _mobileNumberController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-
-  Future<void> setUser(bool isAdmin) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('isAdmin', isAdmin);
-    if (mounted && navigatorKey.currentState != null) {
-      final provider =
-          navigatorKey.currentState!.context.read<UserStatusProvider>();
-      provider.updateAdminStatus(true);
-    }
-  }
-
-  Future<bool> _login() async {
-    bool loggedIn = false;
-    String snakbarText = "";
-    bool userExists = false;
-    bool correctPassword = false;
-    if (_formKey.currentState!.validate()) {
-      //get the login credentials here and check
-      //TODO get the phone number and password here
-      List<Map<String, String>> credentials = [
-        {"mobileNumber": "9347808844", "password": "pass1"},
-        {"mobileNumber": "8074465290", "password": "pass2"},
-        {"mobileNumber": "9912476216", "password": "pass3"}
-      ];
-      for (var user in credentials) {
-        if (_mobileNumberController.text.trim() == user['mobileNumber']) {
-          userExists = true;
-          if (_passwordController.text.trim() == user['password']) {
-            correctPassword = true;
-          }
-        }
-      }
-      if (!userExists) {
-        snakbarText = "User dosen't exist";
-      } else if (!correctPassword) {
-        snakbarText = "Incorrect password";
-      } else {
-        await setUser(true);
-        loggedIn = true; //setting the user as admin
-      }
-      if (mounted && !loggedIn) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(snakbarText),
-            duration: const Duration(milliseconds: 500),
-          ),
-        );
-      }
-    }
-    return loggedIn;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -204,5 +155,53 @@ class _LoginPageState extends State<LoginPage> {
         ],
       ),
     );
+  }
+
+  Future<void> setUser(bool isAdmin) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isAdmin', isAdmin);
+    if (mounted && navigatorKey.currentState != null) {
+      final provider =
+          navigatorKey.currentState!.context.read<UserStatusProvider>();
+      provider.updateAdminStatus(true);
+    }
+  }
+
+  Future<bool> _login() async {
+    bool loggedIn = false;
+    String snakbarText = "";
+    String typedMobileNo = _mobileNumberController.text.trim();
+    String typedPass = _passwordController.text.trim();
+    if (_formKey.currentState!.validate()) {
+      //get the login credentials here and check
+      //TODO get the phone number and password here
+      int statusCode = 0;
+      try {
+        statusCode =
+            await ApiService().authenticateLogin(typedMobileNo, typedPass);
+      } catch (e) {
+        debugPrint("Error:$e");
+        snakbarText = "Connection Failed";
+      }
+      if (statusCode == 200) {
+        await setUser(true); //setting user in shared preferences
+        loggedIn = true; //setting the user as admin
+        snakbarText = "Logged in";
+      } else if (statusCode == 404) {
+        snakbarText = "User dosen't exist";
+      } else if (statusCode == 401) {
+        snakbarText = "Incorrect password";
+      } else if (statusCode == 500) {
+        snakbarText = "Server Error";
+      } else {
+        snakbarText = "Connection Failed";
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          customSnackBar(snakbarText),
+        );
+      }
+    }
+    return loggedIn;
   }
 }

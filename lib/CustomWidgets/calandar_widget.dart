@@ -1,7 +1,8 @@
 import 'package:crc_app/Api/api.dart';
+import 'package:crc_app/CustomWidgets/snack_bar.dart';
 import 'package:crc_app/main.dart';
 import 'package:crc_app/styles.dart';
-import 'package:crc_app/userStatusProvider/user_status_provider.dart';
+import 'package:crc_app/userStatusProvider/user_and_event_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'package:provider/provider.dart';
@@ -29,7 +30,21 @@ class _CalandarWidgetState extends State<CalandarWidget> {
     final provider =
         navigatorKey.currentState!.context.read<UserStatusProvider>();
     isAdmin = provider.isAdmin;
+    // print("Events map:  ${widget.eventsMap}");
     createDisplayEventsMap();
+  }
+
+  @override
+  void didUpdateWidget(CalandarWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    //! Rebuilds when data changes
+    diaplayEventsList.clear(); // Clear the old list
+    createDisplayEventsMap();
+    // print(widget.eventsMap); // Create new display events
+    setState(() {});
+    // if (widget.eventsMap != oldWidget.eventsMap) {
+    //  // Trigger rebuild
+    // }
   }
 
   //test
@@ -88,18 +103,22 @@ class _CalandarWidgetState extends State<CalandarWidget> {
   }
 
   void createDisplayEventsMap() {
+    debugPrint("entered displayevents function"); //TODO remove this
     for (Map<String, dynamic> event in widget.eventsMap) {
       Map<String, dynamic> displayEvent = {};
       DateTime eventDate = DateTime.parse(event["eventDate"]);
-      int startTime = int.parse(event["startTime"]);
-      int endTime = int.parse(event["endTime"]);
+      // int startTime = int.parse(event["startTime"]);
+      // int endTime = int.parse(event["endTime"]);
       displayEvent["id"] = event["id"];
       displayEvent["title"] = event["eventName"];
-      displayEvent["startTime"] =
-          DateTime(eventDate.year, eventDate.month, eventDate.day, startTime);
-      displayEvent["endTime"] =
-          DateTime(eventDate.year, eventDate.month, eventDate.day, endTime);
-      if (event["status"] == "booked") {
+      // displayEvent["startTime"] =
+      //     DateTime(eventDate.year, eventDate.month, eventDate.day, startTime);
+      // displayEvent["endTime"] =
+      //     DateTime(eventDate.year, eventDate.month, eventDate.day, endTime);
+      //TODO added below two lines
+      displayEvent["startTime"] = DateTime.parse(event["startTime"]);
+      displayEvent["endTime"] = DateTime.parse(event["endTime"]);
+      if (event["status"] == "Booked") {
         displayEvent["color"] = Colors.orangeAccent;
       } else if (event["status"] == "inUse") {
         displayEvent["color"] = Colors.redAccent;
@@ -162,17 +181,21 @@ class _EventDialogBoxState extends State<EventDialogBox> {
   @override
   Widget build(BuildContext context) {
     print(widget.currentEventMap);
-    String user = "Guest"; //TODO change this
+    // String user = "Guest";
     DateTime currentEventDate =
         DateTime.parse(widget.currentEventMap["eventDate"]);
-    int currentStartTime = int.parse(widget.currentEventMap["startTime"]);
-    int currentEndTime = int.parse(widget.currentEventMap["endTime"]);
+    // int currentStartTime = int.parse(widget.currentEventMap["startTime"]);
+    // int currentEndTime = int.parse(widget.currentEventMap["endTime"]);
+    DateTime currentStartTime =
+        DateTime.parse(widget.currentEventMap["startTime"]);
+    DateTime currentEndTime = DateTime.parse(widget.currentEventMap["endTime"]);
+    //TODO if not using currentstarttime and end time as datetime, remove the .hour from the below code
     String currentStartTimeString =
-        "${currentStartTime <= 12 ? currentStartTime : currentStartTime - 12}:00 ${currentStartTime < 12 ? "AM" : "PM"}";
+        "${currentStartTime.hour <= 12 ? currentStartTime.hour : currentStartTime.hour - 12}:00 ${currentStartTime.hour < 12 ? "AM" : "PM"}";
     String currentEndTimeString =
-        "${currentEndTime <= 12 ? currentEndTime : currentEndTime - 12}:00 ${currentEndTime < 12 ? "AM" : "PM"}";
+        "${currentEndTime.hour <= 12 ? currentEndTime.hour : currentEndTime.hour - 12}:00 ${currentEndTime.hour < 12 ? "AM" : "PM"}";
     String statusString;
-    if (widget.currentEventMap["status"] == "booked") {
+    if (widget.currentEventMap["status"] == "Booked") {
       statusString = "Booked";
     } else if (widget.currentEventMap["status"] == "inUse") {
       statusString = "In Use";
@@ -194,7 +217,11 @@ class _EventDialogBoxState extends State<EventDialogBox> {
                   visible: widget.isAdmin,
                   child: IconButton(
                       onPressed: () async {
-                        await deleteEvent("67234c541d7ddb818e328094");
+                        bool eventDeleted =
+                            await deleteEvent(widget.currentEventMap["id"]);
+                        if (eventDeleted) {
+                          Navigator.pop(context);
+                        }
                       },
                       icon: const Icon(
                         Icons.delete_outline_rounded,
@@ -256,7 +283,7 @@ class _EventDialogBoxState extends State<EventDialogBox> {
             const SizedBox(
               height: 10,
             ),
-          if (!widget.isAdmin && widget.currentEventMap["status"] == "booked")
+          if (!widget.isAdmin && widget.currentEventMap["status"] == "Booked")
             Form(
               key: _formKey,
               child: Column(
@@ -290,7 +317,14 @@ class _EventDialogBoxState extends State<EventDialogBox> {
                         ),
                         elevation: 5, // Elevation (shadow)
                       ),
-                      onPressed: () {},
+                      onPressed: () async {
+                        bool otpVerified = await verifyOtp(
+                            widget.currentEventMap["id"],
+                            otpTextField.text.trim());
+                        if (otpVerified) {
+                          Navigator.pop(context);
+                        }
+                      },
                       child: Text(
                         'Verify',
                         style: TextStyle(
@@ -308,7 +342,13 @@ class _EventDialogBoxState extends State<EventDialogBox> {
               width: double.infinity,
               height: MediaQuery.of(context).size.height * 0.06,
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: () async {
+                  bool keysReturned =
+                      await returnKeys(widget.currentEventMap["id"]);
+                  if (keysReturned) {
+                    Navigator.pop(context);
+                  }
+                },
                 style: ElevatedButton.styleFrom(
                   //TODO set the size accordingly
                   backgroundColor: prussianBlue,
@@ -332,13 +372,67 @@ class _EventDialogBoxState extends State<EventDialogBox> {
     );
   }
 
-  Future<void> deleteEvent(String id) async {
+  Future<bool> deleteEvent(String id) async {
+    bool deleted = false;
+    String snakbarText = "Failed to delete";
     print(id);
     try {
-      ApiService().deleteData(id);
+      //TODO delete here
+      // ApiService().deleteData(id);
+      final provider =
+          navigatorKey.currentState!.context.read<UserStatusProvider>();
+      provider.deleteEventDataById(id);
+      deleted = true;
+      snakbarText = "Event deleted";
     } catch (e) {
+      snakbarText = "NetWork Error";
       print(e);
     }
+    ScaffoldMessenger.of(context).showSnackBar(
+      customSnackBar(snakbarText),
+    );
+    return deleted;
+  }
+
+  Future<bool> verifyOtp(String id, String EnteredOtp) async {
+    bool verified = false;
+    String snakbarText = "Wrong Otp";
+    //TODO check enteered otp
+    if (EnteredOtp == "1821") {
+      try {
+        final provider =
+            navigatorKey.currentState!.context.read<UserStatusProvider>();
+        provider.updateEventStatusById(id, "inUse");
+        verified = true;
+        snakbarText = "Otp Verified";
+      } catch (e) {
+        snakbarText = "NetWork Error";
+        debugPrint("$e");
+      }
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      customSnackBar(snakbarText),
+    );
+    return verified;
+  }
+
+  Future<bool> returnKeys(String id) async {
+    bool keysReturned = false;
+    String snakbarText = "Keys Not Returned";
+    try {
+      final provider =
+          navigatorKey.currentState!.context.read<UserStatusProvider>();
+      provider.updateEventStatusById(id, "free");
+      snakbarText = "Keys Returned";
+      keysReturned = true;
+    } catch (e) {
+      snakbarText = "NetWork Error";
+      debugPrint("$e");
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      customSnackBar(snakbarText),
+    );
+    return keysReturned;
   }
 }
 

@@ -2,7 +2,7 @@
 import 'package:crc_app/CustomWidgets/floor_classroom_widget.dart';
 import 'package:crc_app/main.dart';
 import 'package:crc_app/pages/choose_user_page.dart';
-import 'package:crc_app/userStatusProvider/user_status_provider.dart';
+import 'package:crc_app/userStatusProvider/user_and_event_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:crc_app/styles.dart';
 import 'package:flutter/services.dart';
@@ -90,25 +90,23 @@ class _FloorsPageState extends State<FloorsPage> {
                     borderRadius: const BorderRadius.only(
                         topLeft: Radius.circular(20),
                         topRight: Radius.circular(20))),
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    // mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      isAdmin != null
-                          ? userWidget(isAdmin!)
-                          : Text("Unable to load"),
-                      SizedBox(
-                        height: 5,
-                      ),
-                      FloorClassroomWidget(floorNumber: 1),
-                      FloorClassroomWidget(floorNumber: 2),
-                      FloorClassroomWidget(floorNumber: 3),
-                      FloorClassroomWidget(floorNumber: 4),
-                      FloorClassroomWidget(floorNumber: 5),
-                      FloorClassroomWidget(floorNumber: 6),
-                    ],
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    isAdmin != null
+                        ? userWidget(isAdmin!)
+                        : Text("Unable to load"),
+                    // SizedBox(
+                    //   height: 5,
+                    // ),
+                    FloorClassroomWidget(floorNumber: 1),
+                    FloorClassroomWidget(floorNumber: 2),
+                    FloorClassroomWidget(floorNumber: 3),
+                    FloorClassroomWidget(floorNumber: 4),
+                    FloorClassroomWidget(floorNumber: 5),
+                    FloorClassroomWidget(floorNumber: 6),
+                  ],
                 ),
               )
             : Text("unable to load"));

@@ -3,7 +3,7 @@ import 'package:crc_app/CustomWidgets/datesWidget.dart';
 import 'package:crc_app/main.dart';
 import 'package:crc_app/pages/add_event_page.dart';
 import 'package:crc_app/styles.dart';
-import 'package:crc_app/userStatusProvider/user_status_provider.dart';
+import 'package:crc_app/userStatusProvider/user_and_event_provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -38,38 +38,20 @@ class EventsPage extends StatefulWidget {
 class _EventsPageState extends State<EventsPage> {
   bool? isAdmin;
   //database related
-  List<Map<String, dynamic>> eventDataList = [
-    {
-      "id": "1234",
-      "eventName": "Axis",
-      "organiserName": "Tarun",
-      "mobileNumber": "8074465290",
-      "eventDate": "2024-11-19",
-      "startTime": "8",
-      "endTime": "11",
-      "status": "free" //3 types booked, inUse,free
-    },
-    {
-      "id": "5678",
-      "eventName": "Aarohi",
-      "organiserName": "vaibhav",
-      "mobileNumber": "9854783912",
-      "eventDate": "2024-11-19",
-      "startTime": "12",
-      "endTime": "14",
-      "status": "inUse" //3 types booked, inUse,free
-    },
-    {
-      "id": "9112",
-      "eventName": "IDS",
-      "organiserName": "Hrushikesh",
-      "mobileNumber": "9347808844",
-      "eventDate": "2024-11-19",
-      "startTime": "16",
-      "endTime": "18",
-      "status": "booked" //3 types booked, inUse,free
-    }
-  ];
+  // List<Map<String, dynamic>> eventDataList = [
+  // {
+  //   "id": "1234",
+  //   "eventName": "Axis",
+  //   "organiserName": "Tarun",
+  //   "mobileNumber": "8074465290",
+  //   "eventDate": "2024-11-24 00:00:00.000",
+  //   "startTime": "2024-11-24 12:00:00.000",
+  //   "endTime": "2024-11-24 17:00:00.000",
+  //   "RoomName": "1-2",
+  //   "status": "free" //3 types booked, inUse,free
+  // },
+  // ];
+  // List<Map<String, dynamic>> eventDataList = [];
   bool isLoading = false;
 
   //database related
@@ -77,6 +59,7 @@ class _EventsPageState extends State<EventsPage> {
   DateTime currentDate = DateTime.now();
   //have declared this variables in updatemap function
   Map<int, String> currentMonthDatesMap = {};
+  List<Map<String, DateTime>> currentEventTimes = [];
   //scroll controller for dates
   ScrollController dateScrollController =
       ScrollController(initialScrollOffset: (DateTime.now().day - 1) * 40);
@@ -126,24 +109,18 @@ class _EventsPageState extends State<EventsPage> {
 
   @override
   Widget build(BuildContext context) {
+    // final events = context.watch<UserStatusProvider>().userEventData;
     double deviceWidth = MediaQuery.of(context).size.width;
     double deviceHeight = MediaQuery.of(context).size.height;
     double appBarHeight = AppBar().preferredSize.height;
     double boxPadding = deviceWidth * 0.05;
 
-    List<Map<String, DateTime>> currentEventTimes = [];
-
-    for (var event in eventDataList) {
-      DateTime eventDate = DateTime.parse(event["eventDate"]);
-      int startTime = int.parse(event["startTime"]);
-      int endTime = int.parse(event["endTime"]);
-      currentEventTimes.add({
-        'startTime':
-            DateTime(eventDate.year, eventDate.month, eventDate.day, startTime),
-        'endTime':
-            DateTime(eventDate.year, eventDate.month, eventDate.day, endTime),
-      });
-    }
+    //! DATA related
+    currentEventTimes.clear();
+    final eventData = context.watch<UserStatusProvider>().userEventData;
+    createCurrentEventTimesList(eventData);
+    debugPrint("test:$eventData");
+    //! Data related
 
     return Scaffold(
       backgroundColor: prussianBlue,
@@ -151,6 +128,8 @@ class _EventsPageState extends State<EventsPage> {
         backgroundColor: prussianBlue,
         leading: IconButton(
           onPressed: () {
+            //clearing the events
+            context.read<UserStatusProvider>().clearEvents();
             Navigator.pop(context);
           },
           icon: const Icon(
@@ -186,8 +165,9 @@ class _EventsPageState extends State<EventsPage> {
                   style: dateStyle(deviceWidth),
                 ),
                 IconButton(
-                    onPressed: () {
+                    onPressed: () async {
                       pickDate(context);
+                      await loadData();
                     },
                     icon: Icon(
                       Icons.calendar_month_outlined,
@@ -216,13 +196,16 @@ class _EventsPageState extends State<EventsPage> {
                       currentColor = backgroundColor;
                     }
                     return InkWell(
-                      onTap: () {
+                      onTap: () async {
                         currentDate = DateTime(
                           currentDate.year,
                           currentDate.month,
                           index + 1,
                         );
-                        setState(() {});
+                        setState(() {
+                          isLoading = true;
+                        });
+                        await loadData();
                       },
                       splashColor: Colors.transparent,
                       highlightColor: Colors.transparent,
@@ -252,21 +235,21 @@ class _EventsPageState extends State<EventsPage> {
             const SizedBox(
               height: 10,
             ),
-            if (!isLoading)
-              Expanded(
+
+            // if (!isLoading)
+            Expanded(
                 child: CalandarWidget(
-                  currentDate: currentDate,
-                  eventsMap: eventDataList,
-                ),
-              )
+              currentDate: currentDate,
+              eventsMap: eventData,
+            ))
           ],
         ),
       ),
       floatingActionButton: Visibility(
         visible: isAdmin!,
         child: FloatingActionButton(
-          onPressed: () async {
-            await showModalBottomSheet(
+          onPressed: () {
+            showModalBottomSheet(
                 context: context,
                 isScrollControlled: true,
                 builder: (BuildContext context) {
@@ -277,7 +260,7 @@ class _EventsPageState extends State<EventsPage> {
                     currentEventTimes: currentEventTimes,
                   );
                 });
-            loadData();
+            // loadData();
           },
           backgroundColor: prussianBlue,
           shape: RoundedRectangleBorder(
@@ -337,26 +320,37 @@ class _EventsPageState extends State<EventsPage> {
     );
   }
 
-  void loadData() async {
+  Future<void> loadData() async {
     if (kDebugMode) {
       print("loading data");
     }
-    // get the data here then setstate
-    try {
-      if (kDebugMode) {
-        List<dynamic>? data = await ApiService().getData(
-            "${widget.floorNumber}-${widget.roomNumber}", "2024-11-01");
-        if (data != null) {
-          print(data);
-        }
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print(e);
-      }
-    }
+    final provider =
+        navigatorKey.currentState!.context.read<UserStatusProvider>();
+    provider.clearEvents();
+    currentEventTimes.clear();
+    //TODO receive data here
     setState(() {
       isLoading = false;
     });
+  }
+
+  void createCurrentEventTimesList(
+      List<Map<String, dynamic>> currentEventsList) {
+    for (var event in currentEventsList) {
+      // DateTime eventDate = DateTime.parse(event["eventDate"]);
+      // int startTime = int.parse(event["startTime"]);
+      // int endTime = int.parse(event["endTime"]);
+      DateTime startTime = DateTime.parse(event["startTime"]);
+      DateTime endTime = DateTime.parse(event["endTime"]);
+      currentEventTimes.add({
+        'startTime':
+            // DateTime(eventDate.year, eventDate.month, eventDate.day, startTime),
+            startTime,
+        'endTime':
+            // DateTime(eventDate.year, eventDate.month, eventDate.day, endTime),
+            endTime
+      });
+    }
+    print(currentEventTimes);
   }
 }
