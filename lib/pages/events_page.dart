@@ -7,9 +7,9 @@ import 'package:crc_app/userStatusProvider/user_and_event_provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:syncfusion_flutter_calendar/calendar.dart';
-import 'package:http/http.dart';
-import 'package:crc_app/Api/api.dart';
+// import 'package:syncfusion_flutter_calendar/calendar.dart';
+// import 'package:http/http.dart';
+// import 'package:crc_app/Api/api.dart';
 
 //if u cange the start time and end time of the day, change it in slandar and in the generate start times function too
 // void main() {

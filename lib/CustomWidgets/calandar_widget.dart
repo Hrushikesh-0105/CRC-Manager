@@ -1,10 +1,10 @@
-import 'package:crc_app/Api/api.dart';
+// import 'package:crc_app/Api/api.dart';
 import 'package:crc_app/CustomWidgets/snack_bar.dart';
 import 'package:crc_app/main.dart';
 import 'package:crc_app/styles.dart';
 import 'package:crc_app/userStatusProvider/user_and_event_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart';
+// import 'package:http/http.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 // import 'package:crc_app/pages/events_page.dart';
@@ -85,12 +85,6 @@ class _CalandarWidgetState extends State<CalandarWidget> {
                   currentEventMap: currentEvent, isAdmin: isAdmin!);
             });
       },
-
-      onLongPress: (CalendarLongPressDetails details) {
-        print(details.appointments![0].id);
-        //TODO delete here
-        //if the user is admin
-      },
       // cellBorderColor: prussianBlue,
       //data
       dataSource: EventDataSource(diaplayEventsList),
@@ -106,7 +100,7 @@ class _CalandarWidgetState extends State<CalandarWidget> {
     debugPrint("entered displayevents function"); //TODO remove this
     for (Map<String, dynamic> event in widget.eventsMap) {
       Map<String, dynamic> displayEvent = {};
-      DateTime eventDate = DateTime.parse(event["eventDate"]);
+      // DateTime eventDate = DateTime.parse(event["eventDate"]);
       // int startTime = int.parse(event["startTime"]);
       // int endTime = int.parse(event["endTime"]);
       displayEvent["id"] = event["id"];
