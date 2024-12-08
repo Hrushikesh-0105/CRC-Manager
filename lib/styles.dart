@@ -25,7 +25,7 @@ TextStyle dateStyle(double deviceWidth) {
       fontSize: 21,
       // fontFamily: customfontFamily,
       fontWeight: FontWeight.bold,
-      color: const Color(0xff222222));
+      color: Color(0xff222222));
 }
 
 TextStyle style1() {

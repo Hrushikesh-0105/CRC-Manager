@@ -14,7 +14,7 @@ void main() {
   runApp(
     ChangeNotifierProvider(
       create: (_) => UserStatusProvider(),
-      child: MyApp(),
+      child: const MyApp(),
     ),
   );
 }
@@ -39,7 +39,7 @@ class MyApp extends StatelessWidget {
         fontFamily: 'OpenSans',
       ),
       debugShowCheckedModeBanner: false,
-      home: SplashScreen(),
+      home: const SplashScreen(),
     );
   }
 }

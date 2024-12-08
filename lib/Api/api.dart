@@ -7,30 +7,24 @@ class ApiService {
   final String loginUrl = 'http://172.25.109.204:5500/login';
 
   // GET request
-  Future<List<dynamic>?> getData(String roomName, String date) async {
-    List<dynamic>? data;
+  Future<List<Map<String, dynamic>>?> getData(
+      String roomName, String date) async {
+    List<Map<String, dynamic>>? dataList;
     try {
-      print('$baseUrl/all?roomName=$roomName&date=$date');
+      debugPrint('$baseUrl/all?roomName=$roomName&date=$date');
       final response = await http
           .get(Uri.parse('$baseUrl/all?roomName=$roomName&date=$date'));
       debugPrint("${response.statusCode}");
 
       if (response.statusCode == 200) {
         debugPrint("Raw Response: ${response.body}");
-
-        data = jsonDecode(response.body);
-        debugPrint("Decoded Response: $data");
-
-        // Access data from the list
-        // data.forEach((item) {
-        //   print("RoomName: ${item['RoomName']}");
-        //   print("Guest: ${item['Guest']}");
-        //   print("Date: ${item['Date']}");
-        //   print("BookedFrom: ${item['BookedFrom']}");
-        //   print("BookedTill: ${item['BookedTill']}");
-        //   print("Status: ${item['Status']}");
-        // });
-        return data;
+        final data = jsonDecode(response.body);
+        print(data);
+        dataList = (data as List).map((item) {
+          return item
+              as Map<String, dynamic>; // Cast each item to Map<String, dynamic>
+        }).toList();
+        print(dataList.runtimeType);
       } else {
         debugPrint("Failed to fetch data: ${response.statusCode}");
       }
@@ -38,43 +32,54 @@ class ApiService {
       debugPrint("hello");
       debugPrint("Error: $e");
     }
-    return null;
+    return dataList;
   }
 
   // POST request
-  Future<void> postData(Map<String, dynamic> body) async {
-    // Map<String, dynamic> ret_map = {};
+  Future<Map<String, dynamic>> postData(Map<String, dynamic> body) async {
+    Map<String, dynamic> dataMap = {};
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/create'),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode(body),
       );
-      debugPrint(response.body);
+
       if (response.statusCode == 201) {
-        final data = jsonDecode(response.body);
-        debugPrint("Response from API (POST): ${data['message']}");
+        // Parse and return the response body
+        dataMap = jsonDecode(response.body) as Map<String, dynamic>;
+        debugPrint("Response from API (POST): ${dataMap['message']}");
       } else {
-        debugPrint("Failed to post data: ${response.statusCode}");
+        // Handle non-201 status codes
+        debugPrint(
+          "Failed to post data. Status Code: ${response.statusCode}, Response: ${response.body}",
+        );
       }
     } catch (e) {
-      debugPrint("Error: $e");
+      // Handle network or JSON parsing errors
+      debugPrint("Error while posting data: $e");
     }
+    return dataMap;
   }
 
   // DELETE request
-  Future<void> deleteData(String id) async {
+  Future<bool> deleteData(String id) async {
+    bool deleted = false;
     try {
       final response = await http.delete(Uri.parse('$baseUrl/delete/$id'));
 
       if (response.statusCode == 200) {
+        deleted = true;
         debugPrint("Successfully deleted item with id: $id");
       } else {
-        debugPrint("Failed to delete data: ${response.statusCode}");
+        debugPrint(
+          "Failed to delete data. Status Code: ${response.statusCode}, Response: ${response.body}",
+        );
       }
     } catch (e) {
-      debugPrint("Error: $e");
+      debugPrint("Error while deleting data: $e");
     }
+    return deleted;
   }
 
   Future<int> authenticateLogin(String mobileNumber, String password) async {
@@ -82,6 +87,7 @@ class ApiService {
       "username": mobileNumber,
       "password": password
     };
+    debugPrint("$body");
     int statusCode = 0;
     try {
       final response = await http.post(
@@ -89,6 +95,7 @@ class ApiService {
         headers: {"Content-Type": "application/json"},
         body: jsonEncode(body),
       );
+      debugPrint("${response.statusCode}");
       if (response.statusCode == 200) {
         statusCode = 200;
         debugPrint("Logged in successfully");
@@ -105,5 +112,43 @@ class ApiService {
       debugPrint("Error: $e");
     }
     return statusCode;
+  }
+
+  // PATCH request to update booking status
+  Future<bool> updateBookingStatus(String id, String newStatus) async {
+    // Validate status locally
+    final validStatus = ['booked', 'inUse', 'free'];
+    if (!validStatus.contains(newStatus)) {
+      debugPrint("Invalid status: $newStatus");
+      return false; // Or handle as necessary
+    }
+
+    bool isUpdated = false;
+    try {
+      final url = Uri.parse('$baseUrl/$id/status');
+      Map<String, dynamic> body = {"Status": newStatus};
+
+      final response = await http.patch(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(body),
+      );
+
+      if (response.statusCode == 200) {
+        isUpdated = true;
+        debugPrint("Booking status updated successfully for ID: $id");
+      } else if (response.statusCode == 400) {
+        debugPrint("Invalid status provided.");
+      } else if (response.statusCode == 404) {
+        debugPrint("Room not found.");
+      } else {
+        debugPrint(
+          "Failed to update booking status. Status Code: ${response.statusCode}, Response: ${response.body}",
+        );
+      }
+    } catch (e) {
+      debugPrint("Error while updating booking status: $e");
+    }
+    return isUpdated;
   }
 }

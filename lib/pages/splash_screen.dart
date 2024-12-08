@@ -85,7 +85,7 @@ class _SplashScreenState extends State<SplashScreen> {
     }
     // Update the next screen based on whether the value exists
     setState(() {
-      nextScreenToNavigate = hasValue ? FloorsPage() : ChooseUserPage();
+      nextScreenToNavigate = hasValue ? const FloorsPage() : ChooseUserPage();
     });
   }
 }

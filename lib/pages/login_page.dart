@@ -14,10 +14,10 @@ class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
   @override
-  _LoginPageState createState() => _LoginPageState();
+  LoginPageState createState() => LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _mobileNumberController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -26,9 +26,9 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     double deviceWidth = MediaQuery.of(context).size.width;
     double deviceHeight = MediaQuery.of(context).size.height;
-    // double appBarHeight = AppBar().preferredSize.height;
+    double appBarHeight = AppBar().preferredSize.height;
     return Scaffold(
-      resizeToAvoidBottomInset: false,
+      // resizeToAvoidBottomInset: false,
       appBar: AppBar(
         backgroundColor: prussianBlue,
         leading: IconButton(
@@ -44,115 +44,122 @@ class _LoginPageState extends State<LoginPage> {
         ),
       ),
       backgroundColor: prussianBlue,
-      body: Column(
-        children: [
-          Expanded(
-            // flex: 8,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(
-                    height: deviceHeight * 0.3,
-                    child: Image.asset("assets/images/VNIT_logo.png")),
-                Text(
-                  "CRC Manager",
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: backgroundColor,
-                      fontSize: 20),
-                )
-              ],
-            ),
-          ),
-          Expanded(
-            // flex: 7,
-            child: Container(
-              width: deviceWidth,
-              padding: EdgeInsets.fromLTRB(deviceWidth * 0.10,
-                  deviceHeight * 0.05, deviceWidth * 0.10, deviceHeight * 0.05),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                color: backgroundColor,
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            SizedBox(
+              height: (deviceHeight - appBarHeight) * 0.5,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(
+                      height: (deviceHeight) * 0.3,
+                      child: Image.asset("assets/images/VNIT_logo.png")),
+                  Text(
+                    "CRC Manager",
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: backgroundColor,
+                        fontSize: 20),
+                  )
+                ],
               ),
-              child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "Login",
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 20,
-                            color: prussianBlue),
-                      ),
-                      SizedBox(
-                        height: 5,
-                      ),
-                      TextFormField(
-                        controller: _mobileNumberController,
-                        keyboardType:
-                            TextInputType.phone, // Show numeric keypad
-                        inputFormatters: [
-                          LengthLimitingTextInputFormatter(10),
-                          FilteringTextInputFormatter.digitsOnly
-                        ],
-
-                        decoration:
-                            textfieldstyle1(Icons.phone, "Mobile Number"),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return "Field cannot be empty";
-                          } else if (value.length != 10) {
-                            return "Enter 10 digit mobile number";
-                          }
-                          return null;
-                        },
-                      ),
-                      TextFormField(
-                        controller: _passwordController,
-                        obscureText: true,
-                        decoration: textfieldstyle1(Icons.lock, "Password"),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return "Field cannot be empty";
-                          }
-                          return null;
-                        },
-                      ),
-                      ElevatedButton(
-                        onPressed: () async {
-                          bool isUserLoggedIn = await _login();
-                          if (isUserLoggedIn) {
-                            //updating provide
-                            Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => FloorsPage()));
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          fixedSize:
-                              Size(deviceWidth * 0.80, deviceHeight * 0.06),
-                          backgroundColor: prussianBlue,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            // Rounded corners
-                          ),
-                          elevation: 5, // Elevation (shadow)
-                        ),
-                        child: Text(
-                          'Login',
-                          style:
-                              TextStyle(fontSize: 18, color: backgroundColor),
-                        ),
-                      ),
-                    ],
-                  )),
             ),
-          )
-        ],
+            SizedBox(
+              height: (deviceHeight - appBarHeight) * 0.5,
+              // flex: 7,
+              child: Container(
+                width: deviceWidth,
+                padding: EdgeInsets.fromLTRB(
+                    deviceWidth * 0.10,
+                    deviceHeight * 0.05,
+                    deviceWidth * 0.10,
+                    deviceHeight * 0.05),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  color: backgroundColor,
+                ),
+                child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "Login",
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 20,
+                              color: prussianBlue),
+                        ),
+                        const SizedBox(
+                          height: 5,
+                        ),
+                        TextFormField(
+                          controller: _mobileNumberController,
+                          keyboardType:
+                              TextInputType.phone, // Show numeric keypad
+                          inputFormatters: [
+                            LengthLimitingTextInputFormatter(10),
+                            FilteringTextInputFormatter.digitsOnly
+                          ],
+
+                          decoration:
+                              textfieldstyle1(Icons.phone, "Mobile Number"),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return "Field cannot be empty";
+                            } else if (value.length != 10) {
+                              return "Enter 10 digit mobile number";
+                            }
+                            return null;
+                          },
+                        ),
+                        TextFormField(
+                          controller: _passwordController,
+                          obscureText: true,
+                          decoration: textfieldstyle1(Icons.lock, "Password"),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return "Field cannot be empty";
+                            }
+                            return null;
+                          },
+                        ),
+                        ElevatedButton(
+                          onPressed: () async {
+                            bool isUserLoggedIn = await _login();
+                            if (isUserLoggedIn) {
+                              //updating provide
+                              Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          const FloorsPage()));
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            fixedSize:
+                                Size(deviceWidth * 0.80, deviceHeight * 0.06),
+                            backgroundColor: prussianBlue,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              // Rounded corners
+                            ),
+                            elevation: 5, // Elevation (shadow)
+                          ),
+                          child: Text(
+                            'Login',
+                            style:
+                                TextStyle(fontSize: 18, color: backgroundColor),
+                          ),
+                        ),
+                      ],
+                    )),
+              ),
+            )
+          ],
+        ),
       ),
     );
   }
@@ -195,6 +202,7 @@ class _LoginPageState extends State<LoginPage> {
         snakbarText = "Server Error";
       } else {
         snakbarText = "Connection Failed";
+        print("Error here");
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

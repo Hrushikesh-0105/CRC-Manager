@@ -1,5 +1,6 @@
+import 'package:crc_app/Api/api.dart';
 import 'package:crc_app/CustomWidgets/calandar_widget.dart';
-import 'package:crc_app/CustomWidgets/datesWidget.dart';
+import 'package:crc_app/CustomWidgets/dates_widget.dart';
 import 'package:crc_app/main.dart';
 import 'package:crc_app/pages/add_event_page.dart';
 import 'package:crc_app/styles.dart';
@@ -7,23 +8,11 @@ import 'package:crc_app/userStatusProvider/user_and_event_provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
+
 // import 'package:syncfusion_flutter_calendar/calendar.dart';
 // import 'package:http/http.dart';
 // import 'package:crc_app/Api/api.dart';
-
-//if u cange the start time and end time of the day, change it in slandar and in the generate start times function too
-// void main() {
-//   runApp(MaterialApp(
-//     theme: ThemeData(
-//       fontFamily: 'OpenSans',
-//     ),
-//     debugShowCheckedModeBanner: false,
-//     home: EventsPage(
-//       floorNumber: 1,
-//       roomNumber: 2,
-//     ),
-//   ));
-// }
 
 class EventsPage extends StatefulWidget {
   final floorNumber;
@@ -37,20 +26,7 @@ class EventsPage extends StatefulWidget {
 
 class _EventsPageState extends State<EventsPage> {
   bool? isAdmin;
-  //database related
-  // List<Map<String, dynamic>> eventDataList = [
-  // {
-  //   "id": "1234",
-  //   "eventName": "Axis",
-  //   "organiserName": "Tarun",
-  //   "mobileNumber": "8074465290",
-  //   "eventDate": "2024-11-24 00:00:00.000",
-  //   "startTime": "2024-11-24 12:00:00.000",
-  //   "endTime": "2024-11-24 17:00:00.000",
-  //   "RoomName": "1-2",
-  //   "status": "free" //3 types booked, inUse,free
-  // },
-  // ];
+
   // List<Map<String, dynamic>> eventDataList = [];
   bool isLoading = false;
 
@@ -118,6 +94,7 @@ class _EventsPageState extends State<EventsPage> {
     //! DATA related
     currentEventTimes.clear();
     final eventData = context.watch<UserStatusProvider>().userEventData;
+    print("Events Map is: $eventData");
     createCurrentEventTimesList(eventData);
     debugPrint("test:$eventData");
     //! Data related
@@ -324,11 +301,24 @@ class _EventsPageState extends State<EventsPage> {
     if (kDebugMode) {
       print("loading data");
     }
+    //!Data related
     final provider =
         navigatorKey.currentState!.context.read<UserStatusProvider>();
     provider.clearEvents();
     currentEventTimes.clear();
     //TODO receive data here
+    String eventDateString = DateFormat('yyyy-MM-dd').format(currentDate);
+    try {
+      List<Map<String, dynamic>>? fetchedData = await ApiService().getData(
+          "${widget.floorNumber}-${widget.roomNumber}", eventDateString);
+      print("fetched data: $fetchedData");
+      if (fetchedData != null) {
+        provider.setEventDataList(fetchedData);
+      }
+    } catch (e) {
+      debugPrint("Error in fetching data: $e");
+    }
+    //!Data related
     setState(() {
       isLoading = false;
     });
@@ -338,19 +328,21 @@ class _EventsPageState extends State<EventsPage> {
       List<Map<String, dynamic>> currentEventsList) {
     for (var event in currentEventsList) {
       // DateTime eventDate = DateTime.parse(event["eventDate"]);
-      // int startTime = int.parse(event["startTime"]);
-      // int endTime = int.parse(event["endTime"]);
-      DateTime startTime = DateTime.parse(event["startTime"]);
-      DateTime endTime = DateTime.parse(event["endTime"]);
+      // int BookedFrom = int.parse(event["BookedFrom"]);
+      // int BookedTill = int.parse(event["BookedTill"]);
+      DateTime bookedFrom = DateTime.parse(event["BookedFrom"]);
+      DateTime bookedTill = DateTime.parse(event["BookedTill"]);
       currentEventTimes.add({
-        'startTime':
-            // DateTime(eventDate.year, eventDate.month, eventDate.day, startTime),
-            startTime,
-        'endTime':
-            // DateTime(eventDate.year, eventDate.month, eventDate.day, endTime),
-            endTime
+        'BookedFrom':
+            // DateTime(eventDate.year, eventDate.month, eventDate.day, BookedFrom),
+            bookedFrom,
+        'BookedTill':
+            // DateTime(eventDate.year, eventDate.month, eventDate.day, BookedTill),
+            bookedTill
       });
     }
-    print(currentEventTimes);
+    if (kDebugMode) {
+      print(currentEventTimes);
+    }
   }
 }

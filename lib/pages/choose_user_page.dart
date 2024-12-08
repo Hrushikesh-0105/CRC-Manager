@@ -66,8 +66,10 @@ class _ChooseUserPageState extends State<ChooseUserPage> {
                   ),
                   InkWell(
                     onTap: () {
-                      Navigator.pushReplacement(context,
-                          MaterialPageRoute(builder: (context) => LoginPage()));
+                      Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const LoginPage()));
                     },
                     child: const ModeButton(
                         buttonIcon: Icons.verified_user, buttonText: "Admin"),
@@ -75,11 +77,10 @@ class _ChooseUserPageState extends State<ChooseUserPage> {
                   InkWell(
                       onTap: () async {
                         await setUser(false);
-
                         Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => FloorsPage()));
+                                builder: (context) => const FloorsPage()));
                       },
                       child: const ModeButton(
                           buttonIcon: Icons.group, buttonText: "Guest"))

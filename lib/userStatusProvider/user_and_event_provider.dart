@@ -37,7 +37,7 @@ class UserStatusProvider extends ChangeNotifier {
 
   // Method to delete a map by its "id" key
   void deleteEventDataById(String id) {
-    _userEventData.removeWhere((event) => event['id'] == id);
+    _userEventData.removeWhere((event) => event['_id'] == id);
     notifyListeners();
   }
 
@@ -46,8 +46,8 @@ class UserStatusProvider extends ChangeNotifier {
     bool updated = false;
     int length = _userEventData.length;
     for (int i = 0; i < length && !updated; i++) {
-      if (_userEventData[i]['id'] == id) {
-        _userEventData[i]['status'] = status;
+      if (_userEventData[i]['_id'] == id) {
+        _userEventData[i]['Status'] = status;
         updated = true;
       }
     }

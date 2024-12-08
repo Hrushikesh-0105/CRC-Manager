@@ -1,7 +1,13 @@
 // import 'dart:developer';
+// ignore_for_file: prefer_const_constructors
+
+// import 'dart:math';
 import 'dart:math';
+
+import 'package:intl/intl.dart';
 // import 'package:crc_app/Api/api.dart';
 // import 'package:crc_app/CustomWidgets/floor_classroom_widget.dart';
+import 'package:crc_app/Api/api.dart';
 import 'package:crc_app/main.dart';
 // import 'package:crc_app/pages/events_page.dart';
 import 'package:crc_app/userStatusProvider/user_and_event_provider.dart';
@@ -309,8 +315,10 @@ class _AddEventPageState extends State<AddEventPage> {
     }
     // Define the event window: 8:00 AM to 8:00 PM
     else {
-      eventTimes.sort((a, b) => a['startTime']!.compareTo(b['startTime']!));
-      print(eventTimes);
+      eventTimes.sort((a, b) => a['BookedFrom']!.compareTo(b['BookedFrom']!));
+      if (kDebugMode) {
+        print(eventTimes);
+      }
 
       List<DateTime> totalStartTimes = [];
       for (int i = 8; i <= 19; i++) {
@@ -321,17 +329,19 @@ class _AddEventPageState extends State<AddEventPage> {
       int mergeIndex = 0;
       int eventTimesLength = eventTimes.length;
       while (mergeIndex != eventTimesLength - 1) {
-        if (eventTimes[mergeIndex]["endTime"]!
-            .isAtSameMomentAs(eventTimes[mergeIndex + 1]["startTime"]!)) {
-          eventTimes[mergeIndex]["endTime"] =
-              eventTimes[mergeIndex + 1]["endTime"]!;
+        if (eventTimes[mergeIndex]["BookedTill"]!
+            .isAtSameMomentAs(eventTimes[mergeIndex + 1]["BookedFrom"]!)) {
+          eventTimes[mergeIndex]["BookedTill"] =
+              eventTimes[mergeIndex + 1]["BookedTill"]!;
           eventTimes.removeAt(mergeIndex + 1);
           eventTimesLength = eventTimesLength - 1;
         } else {
           mergeIndex = mergeIndex + 1;
         }
       }
-      print(eventTimes);
+      if (kDebugMode) {
+        print(eventTimes);
+      }
 
       int eventPointer = 0;
       //checking  event times
@@ -339,16 +349,20 @@ class _AddEventPageState extends State<AddEventPage> {
         if (eventPointer >= eventTimesLength) {
           StartTimes.add(totalStartTimes[i]);
         } else if (totalStartTimes[i]
-            .isBefore(eventTimes[eventPointer]["startTime"]!)) {
+            .isBefore(eventTimes[eventPointer]["BookedFrom"]!)) {
           StartTimes.add(totalStartTimes[i]);
-        } else if (totalStartTimes[i] == eventTimes[eventPointer]["endTime"]! ||
-            totalStartTimes[i].isAfter(eventTimes[eventPointer]["endTime"]!)) {
+        } else if (totalStartTimes[i] ==
+                eventTimes[eventPointer]["BookedTill"]! ||
+            totalStartTimes[i]
+                .isAfter(eventTimes[eventPointer]["BookedTill"]!)) {
           StartTimes.add(totalStartTimes[i]);
           eventPointer++;
         }
       }
     }
-    print(StartTimes);
+    if (kDebugMode) {
+      print(StartTimes);
+    }
     return StartTimes;
   }
 
@@ -362,17 +376,17 @@ class _AddEventPageState extends State<AddEventPage> {
             selectedStartTime.day, i));
       }
     } else {
-      eventTimes.sort((a, b) => a['startTime']!.compareTo(b['startTime']!));
+      eventTimes.sort((a, b) => a['BookedFrom']!.compareTo(b['BookedFrom']!));
       // print(eventTimes);
 
       //merging the event times
       int mergeIndex = 0;
       int eventTimesLength = eventTimes.length;
       while (mergeIndex != eventTimesLength - 1) {
-        if (eventTimes[mergeIndex]["endTime"]!
-            .isAtSameMomentAs(eventTimes[mergeIndex + 1]["startTime"]!)) {
-          eventTimes[mergeIndex]["endTime"] =
-              eventTimes[mergeIndex + 1]["endTime"]!;
+        if (eventTimes[mergeIndex]["BookedTill"]!
+            .isAtSameMomentAs(eventTimes[mergeIndex + 1]["BookedFrom"]!)) {
+          eventTimes[mergeIndex]["BookedTill"] =
+              eventTimes[mergeIndex + 1]["BookedTill"]!;
           eventTimes.removeAt(mergeIndex + 1);
           eventTimesLength = eventTimesLength - 1;
         } else {
@@ -387,8 +401,8 @@ class _AddEventPageState extends State<AddEventPage> {
 
       bool endTimeFound = false;
       for (int i = 0; i < eventTimesLength && !endTimeFound; i++) {
-        if (selectedStartTime.isBefore(eventTimes[i]["startTime"]!)) {
-          lastEndTime = eventTimes[i]["startTime"]!;
+        if (selectedStartTime.isBefore(eventTimes[i]["BookedFrom"]!)) {
+          lastEndTime = eventTimes[i]["BookedFrom"]!;
           endTimeFound = true;
         }
       }
@@ -406,9 +420,12 @@ class _AddEventPageState extends State<AddEventPage> {
 
   Future<bool> _createEvent() async {
     bool eventCreated = false;
-    print("entered create Event function");
+    if (kDebugMode) {
+      print("entered create Event function");
+    }
     if (_formKey.currentState!.validate()) {
-      String eventDateString = widget.eventDate.toString();
+      String eventDateString =
+          DateFormat('yyyy-MM-dd').format(widget.eventDate);
       String startTimeString = _selectedStartTime.toString();
       String endTimeString = _selectedEndTime.toString();
       String eventNameString = eventnameTextField.text.trim();
@@ -418,61 +435,43 @@ class _AddEventPageState extends State<AddEventPage> {
       int selectedRoom = widget.roomNumber;
 
       //TODO remove this random id
-      final random = Random();
-      int randomFourDigitNumber = 1000 + random.nextInt(9000);
+      // final random = Random();
+      // int randomFourDigitNumber = 1000 + random.nextInt(9000);
 
       Map<String, dynamic> eventMap = {
-        "id": "$randomFourDigitNumber",
-        "eventName": eventNameString,
-        "organiserName": organiserNameString,
-        "mobileNumber": mobileNumberString,
-        "eventDate": eventDateString,
-        "startTime": startTimeString,
-        "endTime": endTimeString,
+        // "_id": "$randomFourDigitNumber",
+        "EventName": eventNameString,
+        "OrganiserName": organiserNameString,
+        // "MobileNumber": mobileNumberString,
+        "Date": eventDateString,
+        "BookedFrom": startTimeString,
+        "BookedTill": endTimeString,
         "RoomName": "$selectedFloor-$selectedRoom",
-        "status": "Booked",
+        "Status": "booked",
       };
-      print(eventMap);
-      try {
-        //TODO create here
-        final provider =
-            navigatorKey.currentState!.context.read<UserStatusProvider>();
-        provider.addEventData(eventMap);
-        // print("events");
-        // print(provider.userEventData);
-        // print("End of add function");
-        eventCreated = true;
-      } catch (e) {
-        debugPrint("error: $e");
+      if (kDebugMode) {
+        print(eventMap);
       }
-      // var connectivityResult = await Connectivity().checkConnectivity();
+      try {
+        Map<String, dynamic> createdEventMap =
+            await ApiService().postData(eventMap);
+        if (createdEventMap.isNotEmpty) {
+          eventCreated = true;
+          print(createdEventMap);
+        }
+        if (eventCreated) {
+          final provider =
+              navigatorKey.currentState!.context.read<UserStatusProvider>();
+          provider.addEventData(createdEventMap);
+        }
+      } catch (e) {
+        debugPrint("error:$e");
+      }
+      //TODO create here
 
-      // print("connectivity: ${connectivityResult == ConnectivityResult.mobile}");
-
-      // if (connectivityResult == ConnectivityResult.mobile ||
-      //     connectivityResult == ConnectivityResult.wifi) {
-      //   if (kDebugMode) {
-      //     print("Connected to Mobile Network");
-      //   }
-      // } else {
-      //   if (mounted) {
-      //     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      //       content: Text("You are Offline"),
-      //       duration: const Duration(milliseconds: 500),
-      //     ));
-      //   }
-      //   eventCreated = false;
-      // }
-      print("Event created: $eventCreated");
-      //TODO send data here
-      // try {
-      //   ApiService().postData(eventMap);
-      //   print("data sent");
-      // } catch (e) {
-      //   if (kDebugMode) {
-      //     print(e);
-      //   }
-      // }
+      if (kDebugMode) {
+        print("Event created: $eventCreated");
+      }
     }
     return eventCreated;
   }

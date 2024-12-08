@@ -61,7 +61,7 @@ class _FloorsPageState extends State<FloorsPage> {
           ),
           actions: [
             Container(
-                margin: EdgeInsets.only(right: 20),
+                margin: const EdgeInsets.only(right: 20),
                 child: IconButton(
                     onPressed: () async {
                       final prefs = await SharedPreferences.getInstance();
@@ -76,7 +76,7 @@ class _FloorsPageState extends State<FloorsPage> {
                           MaterialPageRoute(
                               builder: (context) => ChooseUserPage()));
                     },
-                    icon: Icon(Icons.logout_outlined,
+                    icon: const Icon(Icons.logout_outlined,
                         color: Colors.white, size: 20)))
           ],
         ),
@@ -96,20 +96,20 @@ class _FloorsPageState extends State<FloorsPage> {
                   children: [
                     isAdmin != null
                         ? userWidget(isAdmin!)
-                        : Text("Unable to load"),
+                        : const Text("Unable to load"),
                     // SizedBox(
                     //   height: 5,
                     // ),
-                    FloorClassroomWidget(floorNumber: 1),
-                    FloorClassroomWidget(floorNumber: 2),
-                    FloorClassroomWidget(floorNumber: 3),
-                    FloorClassroomWidget(floorNumber: 4),
-                    FloorClassroomWidget(floorNumber: 5),
-                    FloorClassroomWidget(floorNumber: 6),
+                    const FloorClassroomWidget(floorNumber: 1),
+                    const FloorClassroomWidget(floorNumber: 2),
+                    const FloorClassroomWidget(floorNumber: 3),
+                    const FloorClassroomWidget(floorNumber: 4),
+                    const FloorClassroomWidget(floorNumber: 5),
+                    const FloorClassroomWidget(floorNumber: 6),
                   ],
                 ),
               )
-            : Text("unable to load"));
+            : const Text("unable to load"));
   }
 
   // void getUserType() {
@@ -130,7 +130,7 @@ Widget userWidget(bool isAdmin) {
         isAdmin ? Icons.verified_user : Icons.group,
         color: prussianBlue,
       ),
-      SizedBox(
+      const SizedBox(
         width: 5,
       ),
       Text(

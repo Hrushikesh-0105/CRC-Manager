@@ -24,7 +24,7 @@ Widget dateWidget(int date, String day, Color boxColor, double deviceWidth) {
           "$date",
           style: dateTextStyle(deviceWidth, textColor),
         ),
-        SizedBox(
+        const SizedBox(
           height: 6,
         ),
         Text(day,

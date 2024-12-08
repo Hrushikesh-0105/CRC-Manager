@@ -72,7 +72,7 @@ class _FloorClassroomWidgetState extends State<FloorClassroomWidget> {
                       onPressed: (context) {},
                       backgroundColor: prussianBlue,
                       foregroundColor: Colors.white,
-                      padding: EdgeInsets.only(left: 0),
+                      padding: const EdgeInsets.only(left: 0),
                       icon: Icons.keyboard_double_arrow_left_rounded,
                       // label: 'close',
                     ),
@@ -100,7 +100,7 @@ class _FloorClassroomWidgetState extends State<FloorClassroomWidget> {
             ),
           ),
         ),
-        SizedBox(
+        const SizedBox(
           height: 5,
         )
       ],
