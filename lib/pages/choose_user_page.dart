@@ -3,11 +3,14 @@ import 'package:crc_app/pages/floors_page.dart';
 import 'package:crc_app/pages/login_page.dart';
 import 'package:crc_app/styles.dart';
 import 'package:crc_app/userStatusProvider/user_and_event_provider.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ChooseUserPage extends StatefulWidget {
+  const ChooseUserPage({super.key});
+
   @override
   State<ChooseUserPage> createState() => _ChooseUserPageState();
 }
@@ -77,10 +80,12 @@ class _ChooseUserPageState extends State<ChooseUserPage> {
                   InkWell(
                       onTap: () async {
                         await setUser(false);
-                        Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const FloorsPage()));
+                        if (mounted) {
+                          Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const FloorsPage()));
+                        }
                       },
                       child: const ModeButton(
                           buttonIcon: Icons.group, buttonText: "Guest"))
@@ -100,7 +105,7 @@ class _ChooseUserPageState extends State<ChooseUserPage> {
       final provider =
           navigatorKey.currentState!.context.read<UserStatusProvider>();
       provider.updateAdminStatus(isAdmin);
-      debugPrint("User: ${provider.isAdmin}"); //Todo remove this
+      logDebugMsg("User: ${provider.isAdmin}");
     }
   }
 }
@@ -116,9 +121,8 @@ class ModeButton extends StatelessWidget {
     double deviceWidth = MediaQuery.of(context).size.width;
     double deviceHeight = MediaQuery.of(context).size.height;
     return Material(
-      elevation: 4.0, // Adjust elevation here
-      borderRadius:
-          BorderRadius.circular(10.0), // Optional: adds rounded corners
+      elevation: 4.0,
+      borderRadius: BorderRadius.circular(10.0),
       shadowColor: Colors.grey.withOpacity(1),
       child: Container(
         height: deviceHeight * 0.08,
@@ -146,5 +150,11 @@ class ModeButton extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+void logDebugMsg(String message) {
+  if (kDebugMode) {
+    debugPrint(message);
   }
 }

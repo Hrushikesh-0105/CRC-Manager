@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-// import 'package:provider/provider.dart';
-// import 'package:shared_preferences/shared_preferences.dart';
 
 //TODO change class name
 class UserStatusProvider extends ChangeNotifier {
@@ -12,8 +10,6 @@ class UserStatusProvider extends ChangeNotifier {
   List<Map<String, dynamic>> get userEventData => _userEventData;
 
   void updateAdminStatus(bool status) {
-    // final prefs = await SharedPreferences.getInstance();
-    // await prefs.setBool('isAdmin', status);
     _isAdmin = status;
     notifyListeners();
   }

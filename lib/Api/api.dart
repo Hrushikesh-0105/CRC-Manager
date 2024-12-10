@@ -29,7 +29,6 @@ class ApiService {
         debugPrint("Failed to fetch data: ${response.statusCode}");
       }
     } catch (e) {
-      debugPrint("hello");
       debugPrint("Error: $e");
     }
     return dataList;

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 
 class FloorClassroomWidget extends StatefulWidget {
-  final floorNumber;
+  final int floorNumber;
   const FloorClassroomWidget({required this.floorNumber, super.key});
 
   @override

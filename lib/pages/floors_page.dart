@@ -19,18 +19,13 @@ class FloorsPage extends StatefulWidget {
 }
 
 class _FloorsPageState extends State<FloorsPage> {
-  bool? isAdmin;
-
-  bool? loadFloors;
+  bool isAdmin = false;
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
-    loadFloors = true;
     final provider =
         navigatorKey.currentState!.context.read<UserStatusProvider>();
     isAdmin = provider.isAdmin;
-    // getUserType();
   }
 
   @override
@@ -45,13 +40,12 @@ class _FloorsPageState extends State<FloorsPage> {
           backgroundColor: prussianBlue,
           leading: IconButton(
             onPressed: () {
-              SystemNavigator.pop(); //for exiting the app
+              SystemNavigator.pop();
             },
             icon: const Icon(
               Icons.arrow_back_ios_rounded,
               color: Colors.white,
             ),
-            // iconSize: deviceWidth * 0.08,
             iconSize: 20,
           ),
           centerTitle: true,
@@ -62,68 +56,55 @@ class _FloorsPageState extends State<FloorsPage> {
           actions: [
             Container(
                 margin: const EdgeInsets.only(right: 20),
-                child: IconButton(
-                    onPressed: () async {
-                      final prefs = await SharedPreferences.getInstance();
-                      await prefs.remove('isAdmin');
-                      if (mounted && navigatorKey.currentState != null) {
-                        final provider = navigatorKey.currentState!.context
-                            .read<UserStatusProvider>();
-                        provider.updateAdminStatus(false);
-                      } // sets _isAdmin to false
-                      Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => ChooseUserPage()));
-                    },
-                    icon: const Icon(Icons.logout_outlined,
-                        color: Colors.white, size: 20)))
+                child: logoutButton(context))
           ],
         ),
-        body: loadFloors!
-            ? Container(
-                width: deviceWidth,
-                height: deviceHeight - appBarHeight,
-                padding: EdgeInsets.all(boxPadding),
-                decoration: BoxDecoration(
-                    color: backgroundColor,
-                    borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(20),
-                        topRight: Radius.circular(20))),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    isAdmin != null
-                        ? userWidget(isAdmin!)
-                        : const Text("Unable to load"),
-                    // SizedBox(
-                    //   height: 5,
-                    // ),
-                    const FloorClassroomWidget(floorNumber: 1),
-                    const FloorClassroomWidget(floorNumber: 2),
-                    const FloorClassroomWidget(floorNumber: 3),
-                    const FloorClassroomWidget(floorNumber: 4),
-                    const FloorClassroomWidget(floorNumber: 5),
-                    const FloorClassroomWidget(floorNumber: 6),
-                  ],
-                ),
-              )
-            : const Text("unable to load"));
+        body: Container(
+          width: deviceWidth,
+          height: deviceHeight - appBarHeight,
+          padding: EdgeInsets.all(boxPadding),
+          decoration: BoxDecoration(
+              color: backgroundColor,
+              borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(20), topRight: Radius.circular(20))),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              userWidget(isAdmin),
+              const FloorClassroomWidget(floorNumber: 1),
+              const FloorClassroomWidget(floorNumber: 2),
+              const FloorClassroomWidget(floorNumber: 3),
+              const FloorClassroomWidget(floorNumber: 4),
+              const FloorClassroomWidget(floorNumber: 5),
+              const FloorClassroomWidget(floorNumber: 6),
+            ],
+          ),
+        ));
   }
 
-  // void getUserType() {
-  //   // final prefs = await SharedPreferences.getInstance();
-  //   // isAdmin = prefs.getBool('isAdmin');
-  //   isAdmin = Provider.of<UserStatusProvider>(context).isAdmin;
-  //   // isAdmin = true;
-  //   setState(() {
-  //     loadFloors = true;
-  //   });
-  // }
+  IconButton logoutButton(BuildContext context) {
+    return IconButton(
+        onPressed: () async {
+          await removeUserStatusFromPrefsAndProvider();
+          Navigator.pushReplacement(context,
+              MaterialPageRoute(builder: (context) => ChooseUserPage()));
+        },
+        icon: const Icon(Icons.logout_outlined, color: Colors.white, size: 20));
+  }
+
+  Future<void> removeUserStatusFromPrefsAndProvider() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('isAdmin');
+    if (mounted && navigatorKey.currentState != null) {
+      final provider =
+          navigatorKey.currentState!.context.read<UserStatusProvider>();
+      provider.updateAdminStatus(false);
+    }
+  }
 }
 
-Widget userWidget(bool isAdmin) {
+Row userWidget(bool isAdmin) {
   return Row(
     children: [
       Icon(

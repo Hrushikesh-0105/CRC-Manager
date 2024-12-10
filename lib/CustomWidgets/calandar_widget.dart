@@ -42,11 +42,7 @@ class _CalandarWidgetState extends State<CalandarWidget> {
     //! Rebuilds when data changes
     diaplayEventsList.clear(); // Clear the old list
     createDisplayEventsMap();
-    // print(widget.eventsMap); // Create new display events
     setState(() {});
-    // if (widget.eventsMap != oldWidget.eventsMap) {
-    //  // Trigger rebuild
-    // }
   }
 
   //test
@@ -100,7 +96,7 @@ class _CalandarWidgetState extends State<CalandarWidget> {
   }
 
   void createDisplayEventsMap() {
-    debugPrint("entered displayevents function"); //TODO remove this
+    debugPrint("entered create displayevents function"); //TODO remove this
     // print(widget.eventsMap);
     for (Map<String, dynamic> event in widget.eventsMap) {
       Map<String, dynamic> displayEvent = {};

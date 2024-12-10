@@ -19,15 +19,6 @@ void main() {
   );
 }
 
-// void main() {
-//   runApp(
-//     ChangeNotifierProvider(
-//       create: (_) => UserStatusProvider(),
-//       child: MyApp(),
-//     ),
-//   );
-// }
-
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 

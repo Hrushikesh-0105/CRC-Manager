@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:crc_app/Api/api.dart';
 import 'package:crc_app/CustomWidgets/snack_bar.dart';
 import 'package:crc_app/main.dart';
@@ -5,6 +6,7 @@ import 'package:crc_app/pages/choose_user_page.dart';
 import 'package:crc_app/pages/floors_page.dart';
 import 'package:crc_app/styles.dart';
 import 'package:crc_app/userStatusProvider/user_and_event_provider.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -18,6 +20,7 @@ class LoginPage extends StatefulWidget {
 }
 
 class LoginPageState extends State<LoginPage> {
+  bool _isLoading = false;
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _mobileNumberController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -33,8 +36,10 @@ class LoginPageState extends State<LoginPage> {
         backgroundColor: prussianBlue,
         leading: IconButton(
           onPressed: () {
-            Navigator.pushReplacement(context,
-                MaterialPageRoute(builder: (context) => ChooseUserPage()));
+            Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const ChooseUserPage()));
           },
           icon: const Icon(
             Icons.arrow_back_ios_rounded,
@@ -67,7 +72,6 @@ class LoginPageState extends State<LoginPage> {
             ),
             SizedBox(
               height: (deviceHeight - appBarHeight) * 0.5,
-              // flex: 7,
               child: Container(
                 width: deviceWidth,
                 padding: EdgeInsets.fromLTRB(
@@ -126,34 +130,34 @@ class LoginPageState extends State<LoginPage> {
                             return null;
                           },
                         ),
-                        ElevatedButton(
-                          onPressed: () async {
-                            bool isUserLoggedIn = await _login();
-                            if (isUserLoggedIn) {
-                              //updating provide
-                              Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) =>
-                                          const FloorsPage()));
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            fixedSize:
-                                Size(deviceWidth * 0.80, deviceHeight * 0.06),
-                            backgroundColor: prussianBlue,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              // Rounded corners
-                            ),
-                            elevation: 5, // Elevation (shadow)
-                          ),
-                          child: Text(
-                            'Login',
-                            style:
-                                TextStyle(fontSize: 18, color: backgroundColor),
-                          ),
-                        ),
+                        _isLoading
+                            ? loadingIndicatorWidget()
+                            : ElevatedButton(
+                                onPressed: () async {
+                                  setState(() {
+                                    _isLoading = true;
+                                  });
+                                  bool isUserLoggedIn = await _login();
+                                  setState(() {
+                                    _isLoading = false;
+                                  });
+                                  if (isUserLoggedIn) {
+                                    //updating provide
+                                    Navigator.pushReplacement(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                                const FloorsPage()));
+                                  }
+                                },
+                                style:
+                                    loginButtonStyle(deviceWidth, deviceHeight),
+                                child: Text(
+                                  'Login',
+                                  style: TextStyle(
+                                      fontSize: 18, color: backgroundColor),
+                                ),
+                              ),
                       ],
                     )),
               ),
@@ -161,6 +165,18 @@ class LoginPageState extends State<LoginPage> {
           ],
         ),
       ),
+    );
+  }
+
+  ButtonStyle loginButtonStyle(double deviceWidth, double deviceHeight) {
+    return ElevatedButton.styleFrom(
+      fixedSize: Size(deviceWidth * 0.80, deviceHeight * 0.06),
+      backgroundColor: prussianBlue,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+        // Rounded corners
+      ),
+      elevation: 5, // Elevation (shadow)
     );
   }
 
@@ -178,21 +194,25 @@ class LoginPageState extends State<LoginPage> {
     bool loggedIn = false;
     String snakbarText = "";
     String typedMobileNo = _mobileNumberController.text.trim();
-    String typedPass = _passwordController.text.trim();
+    String typedPassword = _passwordController.text.trim();
     if (_formKey.currentState!.validate()) {
-      //get the login credentials here and check
-      //TODO get the phone number and password here
       int statusCode = 0;
       try {
-        statusCode =
-            await ApiService().authenticateLogin(typedMobileNo, typedPass);
+        const timeoutDuration = Duration(seconds: 10);
+        statusCode = await ApiService()
+            .authenticateLogin(typedMobileNo, typedPassword)
+            .timeout(timeoutDuration, onTimeout: () {
+          // This function is called if the operation takes too long
+          snakbarText = "Login in Timed out";
+          throw TimeoutException("Connection timed out");
+        });
       } catch (e) {
-        debugPrint("Error:$e");
+        logDebugMsg("Error:$e");
         snakbarText = "Connection Failed";
       }
       if (statusCode == 200) {
-        await setUser(true); //setting user in shared preferences
-        loggedIn = true; //setting the user as admin
+        await setUser(true); //setting user as admin in shared preferences
+        loggedIn = true;
         snakbarText = "Logged in";
       } else if (statusCode == 404) {
         snakbarText = "User dosen't exist";
@@ -202,7 +222,7 @@ class LoginPageState extends State<LoginPage> {
         snakbarText = "Server Error";
       } else {
         snakbarText = "Connection Failed";
-        print("Error here");
+        logDebugMsg("Error here");
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -211,5 +231,23 @@ class LoginPageState extends State<LoginPage> {
       }
     }
     return loggedIn;
+  }
+
+  Widget loadingIndicatorWidget() {
+    return Center(
+      child: SizedBox(
+        height: 30,
+        width: 30,
+        child: CircularProgressIndicator(
+          color: prussianBlue,
+        ),
+      ),
+    );
+  }
+}
+
+void logDebugMsg(String message) {
+  if (kDebugMode) {
+    debugPrint(message);
   }
 }

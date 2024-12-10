@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'package:crc_app/Api/api.dart';
 import 'package:crc_app/CustomWidgets/calandar_widget.dart';
 import 'package:crc_app/CustomWidgets/dates_widget.dart';
+import 'package:crc_app/CustomWidgets/snack_bar.dart';
 import 'package:crc_app/main.dart';
 import 'package:crc_app/pages/add_event_page.dart';
 import 'package:crc_app/styles.dart';
@@ -10,13 +12,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 
-// import 'package:syncfusion_flutter_calendar/calendar.dart';
-// import 'package:http/http.dart';
-// import 'package:crc_app/Api/api.dart';
-
 class EventsPage extends StatefulWidget {
-  final floorNumber;
-  final roomNumber;
+  final int floorNumber;
+  final int roomNumber;
   const EventsPage(
       {required this.floorNumber, required this.roomNumber, super.key});
 
@@ -26,20 +24,12 @@ class EventsPage extends StatefulWidget {
 
 class _EventsPageState extends State<EventsPage> {
   bool? isAdmin;
-
-  // List<Map<String, dynamic>> eventDataList = [];
   bool isLoading = false;
-
-  //database related
-
   DateTime currentDate = DateTime.now();
-  //have declared this variables in updatemap function
   Map<int, String> currentMonthDatesMap = {};
   List<Map<String, DateTime>> currentEventTimes = [];
-  //scroll controller for dates
   ScrollController dateScrollController =
       ScrollController(initialScrollOffset: (DateTime.now().day - 1) * 40);
-  //setting initial position of the date scrolling
 
   final List<String> monthNames = [
     'January',
@@ -74,7 +64,7 @@ class _EventsPageState extends State<EventsPage> {
         navigatorKey.currentState!.context.read<UserStatusProvider>();
     isAdmin = provider.isAdmin;
     isLoading = true;
-    loadData();
+    loadData(context);
   }
 
   @override
@@ -93,10 +83,10 @@ class _EventsPageState extends State<EventsPage> {
 
     //! DATA related
     currentEventTimes.clear();
+    //widget rebuilds if event data is changed
     final eventData = context.watch<UserStatusProvider>().userEventData;
-    print("Events Map is: $eventData");
     createCurrentEventTimesList(eventData);
-    debugPrint("test:$eventData");
+    logDebugMsg("Current Event Data:$eventData");
     //! Data related
 
     return Scaffold(
@@ -143,8 +133,11 @@ class _EventsPageState extends State<EventsPage> {
                 ),
                 IconButton(
                     onPressed: () async {
-                      pickDate(context);
-                      await loadData();
+                      await pickDate(context);
+                      setState(() {
+                        isLoading = true;
+                      });
+                      await loadData(context);
                     },
                     icon: Icon(
                       Icons.calendar_month_outlined,
@@ -155,14 +148,11 @@ class _EventsPageState extends State<EventsPage> {
             ),
             //selecting dates scroll view
             SizedBox(
-              //sized box is needed to limit the height of the dateWidget
-              //height:deviceHeight*0.11
               height: 56,
               child: SizedBox(
                 width: deviceWidth - 2 * boxPadding,
                 child: ListView.builder(
-                  scrollDirection:
-                      Axis.horizontal, // Make the ListView horizontal
+                  scrollDirection: Axis.horizontal,
                   controller: dateScrollController,
                   itemCount: currentMonthDatesMap.length,
                   itemBuilder: (context, index) {
@@ -182,7 +172,7 @@ class _EventsPageState extends State<EventsPage> {
                         setState(() {
                           isLoading = true;
                         });
-                        await loadData();
+                        await loadData(context);
                       },
                       splashColor: Colors.transparent,
                       highlightColor: Colors.transparent,
@@ -196,8 +186,6 @@ class _EventsPageState extends State<EventsPage> {
                 ),
               ),
             ),
-            //
-            // const Divider(),
             const SizedBox(
               height: 5,
             ),
@@ -206,19 +194,15 @@ class _EventsPageState extends State<EventsPage> {
               style: dateStyle(deviceWidth),
             ),
             const SizedBox(
-              height: 10,
+              height: 20,
             ),
-
-            const SizedBox(
-              height: 10,
-            ),
-
-            // if (!isLoading)
-            Expanded(
-                child: CalandarWidget(
-              currentDate: currentDate,
-              eventsMap: eventData,
-            ))
+            isLoading
+                ? loadingIndicatorWidget()
+                : Expanded(
+                    child: CalandarWidget(
+                    currentDate: currentDate,
+                    eventsMap: eventData,
+                  ))
           ],
         ),
       ),
@@ -237,7 +221,6 @@ class _EventsPageState extends State<EventsPage> {
                     currentEventTimes: currentEventTimes,
                   );
                 });
-            // loadData();
           },
           backgroundColor: prussianBlue,
           shape: RoundedRectangleBorder(
@@ -250,6 +233,44 @@ class _EventsPageState extends State<EventsPage> {
         ),
       ),
     );
+  }
+
+  Future<void> loadData(BuildContext context) async {
+    logDebugMsg("Loading data");
+    String snackbarText = "Server Error";
+    //!Data related
+    final provider =
+        navigatorKey.currentState!.context.read<UserStatusProvider>();
+    provider.clearEvents();
+    currentEventTimes.clear();
+    String eventDateString = DateFormat('yyyy-MM-dd').format(currentDate);
+    String roomName = "${widget.floorNumber}-${widget.roomNumber}";
+    try {
+      const timeoutDuration = Duration(seconds: 10);
+      List<Map<String, dynamic>>? fetchedData = await ApiService()
+          .getData(roomName, eventDateString)
+          .timeout(timeoutDuration, onTimeout: () {
+        // This function is called if the operation takes too long
+        snackbarText = "Connection Timed out";
+        throw TimeoutException("Connection timed out");
+      });
+
+      logDebugMsg("fetched data: $fetchedData");
+
+      if (fetchedData != null) {
+        provider.setEventDataList(fetchedData);
+      } else {
+        logDebugMsg("show snakbar");
+        showSnackBar(context, snackbarText);
+      }
+    } catch (e) {
+      logDebugMsg("Error in fetching data: $e");
+      showSnackBar(context, snackbarText);
+    }
+    //!Data related
+    setState(() {
+      isLoading = false;
+    });
   }
 
   Future<void> pickDate(BuildContext context) async {
@@ -265,13 +286,9 @@ class _EventsPageState extends State<EventsPage> {
   }
 
   void updateDateMap() {
-    // to get device width for scroll controller
-    //double deviceWidth = MediaQuery.of(context).size.width;
-    // Get the first day of the current month
     DateTime startOfMonth;
     DateTime endOfMonth;
     startOfMonth = DateTime(currentDate.year, currentDate.month, 1);
-    // Get the last day of the current month
     endOfMonth = DateTime(currentDate.year, currentDate.month + 1, 0);
     currentMonthDatesMap.clear();
     int weekIndex = startOfMonth.weekday - 1;
@@ -283,7 +300,6 @@ class _EventsPageState extends State<EventsPage> {
       weekIndex++;
     }
     animateScroller();
-    // print(currentMonthDatesMap);
     setState(() {});
   }
 
@@ -297,52 +313,40 @@ class _EventsPageState extends State<EventsPage> {
     );
   }
 
-  Future<void> loadData() async {
-    if (kDebugMode) {
-      print("loading data");
-    }
-    //!Data related
-    final provider =
-        navigatorKey.currentState!.context.read<UserStatusProvider>();
-    provider.clearEvents();
-    currentEventTimes.clear();
-    //TODO receive data here
-    String eventDateString = DateFormat('yyyy-MM-dd').format(currentDate);
-    try {
-      List<Map<String, dynamic>>? fetchedData = await ApiService().getData(
-          "${widget.floorNumber}-${widget.roomNumber}", eventDateString);
-      print("fetched data: $fetchedData");
-      if (fetchedData != null) {
-        provider.setEventDataList(fetchedData);
-      }
-    } catch (e) {
-      debugPrint("Error in fetching data: $e");
-    }
-    //!Data related
-    setState(() {
-      isLoading = false;
-    });
-  }
-
   void createCurrentEventTimesList(
       List<Map<String, dynamic>> currentEventsList) {
     for (var event in currentEventsList) {
-      // DateTime eventDate = DateTime.parse(event["eventDate"]);
-      // int BookedFrom = int.parse(event["BookedFrom"]);
-      // int BookedTill = int.parse(event["BookedTill"]);
       DateTime bookedFrom = DateTime.parse(event["BookedFrom"]);
       DateTime bookedTill = DateTime.parse(event["BookedTill"]);
-      currentEventTimes.add({
-        'BookedFrom':
-            // DateTime(eventDate.year, eventDate.month, eventDate.day, BookedFrom),
-            bookedFrom,
-        'BookedTill':
-            // DateTime(eventDate.year, eventDate.month, eventDate.day, BookedTill),
-            bookedTill
-      });
+      currentEventTimes
+          .add({'BookedFrom': bookedFrom, 'BookedTill': bookedTill});
     }
     if (kDebugMode) {
       print(currentEventTimes);
     }
   }
+
+  Widget loadingIndicatorWidget() {
+    return Center(
+      child: SizedBox(
+        height: 30,
+        width: 30,
+        child: CircularProgressIndicator(
+          color: prussianBlue,
+        ),
+      ),
+    );
+  }
+}
+
+void logDebugMsg(String message) {
+  if (kDebugMode) {
+    debugPrint(message);
+  }
+}
+
+void showSnackBar(BuildContext context, String snackbarText) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    customSnackBar(snackbarText),
+  );
 }

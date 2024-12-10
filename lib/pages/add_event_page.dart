@@ -1,19 +1,8 @@
-// import 'dart:developer';
-// ignore_for_file: prefer_const_constructors
-
-// import 'dart:math';
 import 'dart:math';
-
 import 'package:intl/intl.dart';
-// import 'package:crc_app/Api/api.dart';
-// import 'package:crc_app/CustomWidgets/floor_classroom_widget.dart';
 import 'package:crc_app/Api/api.dart';
 import 'package:crc_app/main.dart';
-// import 'package:crc_app/pages/events_page.dart';
 import 'package:crc_app/userStatusProvider/user_and_event_provider.dart';
-// import 'package:connectivity_plus/connectivity_plus.dart';
-// import 'package:http/http.dart';
-// import 'package:crc_app/pages/thirdPage.dart';
 import 'package:crc_app/styles.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -37,7 +26,7 @@ class AddEventPage extends StatefulWidget {
 }
 
 class _AddEventPageState extends State<AddEventPage> {
-  final _formKey = GlobalKey<FormState>();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   //textfield controllers
   TextEditingController eventnameTextField = TextEditingController();
   TextEditingController organiserNameTextField = TextEditingController();
@@ -47,10 +36,7 @@ class _AddEventPageState extends State<AddEventPage> {
   TextEditingController eventEndTimeTextField = TextEditingController();
   TextEditingController classroomTextField = TextEditingController();
 
-  //textfield colors
-
   //date and time
-  // DateTime? eventDate;
   List<DateTime> possibleStartTimes = [];
   List<DateTime> possibleEndTimes = [];
   DateTime? _selectedStartTime;
@@ -58,7 +44,6 @@ class _AddEventPageState extends State<AddEventPage> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     possibleStartTimes = generatePossibleStartTimes(widget.currentEventTimes);
   }
@@ -66,8 +51,7 @@ class _AddEventPageState extends State<AddEventPage> {
   @override
   Widget build(BuildContext context) {
     classroomTextField.text = "${widget.floorNumber}-${widget.roomNumber}";
-    eventDateTextField.text =
-        "${widget.eventDate.day}/${widget.eventDate.month}/${widget.eventDate.year}";
+    eventDateTextField.text = DateFormat('dd-MM-yyyy').format(widget.eventDate);
     double deviceWidth = MediaQuery.of(context).size.width;
     double deviceHeight = MediaQuery.of(context).size.height;
     double boxPadding = deviceWidth * 0.05;
