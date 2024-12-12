@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'package:intl/intl.dart';
 import 'package:crc_app/Api/api.dart';
 import 'package:crc_app/main.dart';
@@ -408,29 +407,20 @@ class _AddEventPageState extends State<AddEventPage> {
       print("entered create Event function");
     }
     if (_formKey.currentState!.validate()) {
-      String eventDateString =
-          DateFormat('yyyy-MM-dd').format(widget.eventDate);
-      String startTimeString = _selectedStartTime.toString();
-      String endTimeString = _selectedEndTime.toString();
-      String eventNameString = eventnameTextField.text.trim();
-      String organiserNameString = organiserNameTextField.text.trim();
-      String mobileNumberString = mobileNumberTextField.text.trim();
-      int selectedFloor = widget.floorNumber;
-      int selectedRoom = widget.roomNumber;
-
       //TODO remove this random id
       // final random = Random();
       // int randomFourDigitNumber = 1000 + random.nextInt(9000);
-
+      String eventDateString =
+          DateFormat('yyyy-MM-dd').format(widget.eventDate);
       Map<String, dynamic> eventMap = {
         // "_id": "$randomFourDigitNumber",
-        "EventName": eventNameString,
-        "OrganiserName": organiserNameString,
-        // "MobileNumber": mobileNumberString,
+        "EventName": eventnameTextField.text.trim(),
+        "OrganiserName": organiserNameTextField.text.trim(),
+        // "MobileNumber": mobileNumberTextField.text.trim(),
         "Date": eventDateString,
-        "BookedFrom": startTimeString,
-        "BookedTill": endTimeString,
-        "RoomName": "$selectedFloor-$selectedRoom",
+        "BookedFrom": _selectedStartTime.toString(),
+        "BookedTill": _selectedEndTime.toString(),
+        "RoomName": "${widget.floorNumber}-${widget.roomNumber}",
         "Status": "booked",
       };
       if (kDebugMode) {
@@ -441,22 +431,23 @@ class _AddEventPageState extends State<AddEventPage> {
             await ApiService().postData(eventMap);
         if (createdEventMap.isNotEmpty) {
           eventCreated = true;
-          print(createdEventMap);
-        }
-        if (eventCreated) {
+          logDebugMsg("$createdEventMap");
           final provider =
               navigatorKey.currentState!.context.read<UserStatusProvider>();
           provider.addEventData(createdEventMap);
         }
       } catch (e) {
-        debugPrint("error:$e");
+        logDebugMsg("error:$e");
       }
       //TODO create here
-
-      if (kDebugMode) {
-        print("Event created: $eventCreated");
-      }
+      logDebugMsg("Event created: $eventCreated");
     }
     return eventCreated;
+  }
+}
+
+void logDebugMsg(String message) {
+  if (kDebugMode) {
+    debugPrint(message);
   }
 }

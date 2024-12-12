@@ -32,7 +32,7 @@ class _CalandarWidgetState extends State<CalandarWidget> {
     final provider =
         navigatorKey.currentState!.context.read<UserStatusProvider>();
     isAdmin = provider.isAdmin;
-    // print("Events map:  ${widget.eventsMap}");
+    // logDebugMsg("Events map:  ${widget.eventsMap}");
     createDisplayEventsMap();
   }
 
@@ -73,10 +73,10 @@ class _CalandarWidgetState extends State<CalandarWidget> {
       todayHighlightColor: prussianBlue,
       onTap: (CalendarTapDetails details) {
         //TODO show dialogue box of event info here
-        debugPrint("${details.appointments}");
+        logDebugMsg("${details.appointments}");
         String currentId = details.appointments![0].id;
         Map<String, dynamic> currentEvent = findCurrentEvent(currentId);
-        // print(currentEvent);
+        // logDebugMsg(currentEvent);
         showDialog(
             context: context,
             builder: (BuildContext context) {
@@ -96,21 +96,20 @@ class _CalandarWidgetState extends State<CalandarWidget> {
   }
 
   void createDisplayEventsMap() {
-    debugPrint("entered create displayevents function"); //TODO remove this
-    // print(widget.eventsMap);
+    logDebugMsg("entered create displayevents function");
+    // logDebugMsg(widget.eventsMap);
     for (Map<String, dynamic> event in widget.eventsMap) {
       Map<String, dynamic> displayEvent = {};
       // DateTime eventDate = DateTime.parse(event["Date"]);
       // int startTime = int.parse(event["BookedFrom"]);
       // int endTime = int.parse(event["BookedTill"]);
       displayEvent["_id"] = event["_id"];
-      debugPrint(event["_id"]);
+      logDebugMsg(event["_id"]);
       displayEvent["title"] = event["EventName"];
       // displayEvent["BookedFrom"] =
       //     DateTime(eventDate.year, eventDate.month, eventDate.day, startTime);
       // displayEvent["BookedTill"] =
       //     DateTime(eventDate.year, eventDate.month, eventDate.day, endTime);
-      //TODO added below two lines
       displayEvent["BookedFrom"] = DateTime.parse(event["BookedFrom"]);
       displayEvent["BookedTill"] = DateTime.parse(event["BookedTill"]);
       if (event["Status"] == "booked") {
@@ -118,7 +117,7 @@ class _CalandarWidgetState extends State<CalandarWidget> {
       } else if (event["Status"] == "inUse") {
         displayEvent["color"] = Colors.redAccent;
       } else {
-        displayEvent["color"] = const Color(0xff69d1c5);
+        displayEvent["color"] = Colors.grey;
       }
       diaplayEventsList.add(displayEvent);
     }
@@ -141,7 +140,7 @@ class EventDataSource extends CalendarDataSource {
   EventDataSource(List<Map<String, dynamic>> eventsMap) {
     appointments = eventsMap.map((eventMap) {
       //!error here
-      print("id is: ${eventMap["_id"]}");
+      logDebugMsg("id is: ${eventMap["_id"]}");
       return Appointment(
         id: "${eventMap["_id"]}",
         startTime: eventMap["BookedFrom"],
@@ -172,18 +171,18 @@ class _EventDialogBoxState extends State<EventDialogBox> {
   void dispose() {
     // TODO: implement dispose
     super.dispose();
-    print("Entered event dialog box");
+    logDebugMsg("Entered event dialog box");
     otpTextField.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     if (kDebugMode) {
-      print(widget.currentEventMap);
+      logDebugMsg("${widget.currentEventMap}");
     }
     // String user = "Guest";
     DateTime currentEventDate = DateTime.parse(widget.currentEventMap["Date"]);
-    // print(widget.currentEventMap);
+    // logDebugMsg(widget.currentEventMap);
     // int currentStartTime = int.parse(widget.currentEventMap["BookedFrom"]);
     // int currentEndTime = int.parse(widget.currentEventMap["BookedTill"]);
     DateTime currentStartTime =
@@ -289,7 +288,6 @@ class _EventDialogBoxState extends State<EventDialogBox> {
             const SizedBox(
               height: 10,
             ),
-          //! change to !widget.isAdmin below
           if (!widget.isAdmin && widget.currentEventMap["Status"] == "booked")
             Form(
               key: _formKey,
@@ -345,7 +343,6 @@ class _EventDialogBoxState extends State<EventDialogBox> {
                 ],
               ),
             ),
-
           if (!widget.isAdmin && widget.currentEventMap["Status"] == "inUse")
             SizedBox(
               width: double.infinity,
@@ -385,7 +382,7 @@ class _EventDialogBoxState extends State<EventDialogBox> {
     bool eventDeleted;
     String snakbarText = "Failed to delete";
     if (kDebugMode) {
-      print(id);
+      logDebugMsg(id);
     }
     try {
       //TODO delete here
@@ -394,14 +391,14 @@ class _EventDialogBoxState extends State<EventDialogBox> {
         final provider =
             navigatorKey.currentState!.context.read<UserStatusProvider>();
         provider.deleteEventDataById(id);
-        debugPrint("Deleted successfully");
+        logDebugMsg("Deleted successfully");
         snakbarText = "Event deleted";
       }
     } catch (e) {
       snakbarText = "NetWork Error";
       eventDeleted = false;
       if (kDebugMode) {
-        print(e);
+        logDebugMsg("$e");
       }
     }
     if (eventDeleted) {
@@ -430,7 +427,7 @@ class _EventDialogBoxState extends State<EventDialogBox> {
         }
       } catch (e) {
         snakbarText = "NetWork Error";
-        debugPrint("$e");
+        logDebugMsg("$e");
       }
     }
     ScaffoldMessenger.of(context).showSnackBar(
@@ -453,7 +450,7 @@ class _EventDialogBoxState extends State<EventDialogBox> {
       }
     } catch (e) {
       snakbarText = "NetWork Error";
-      debugPrint("$e");
+      logDebugMsg("$e");
     }
     ScaffoldMessenger.of(context).showSnackBar(
       customSnackBar(snakbarText),
@@ -485,5 +482,11 @@ class TextRichEventDialog extends StatelessWidget {
       ),
       softWrap: true, //allows wrapping of text to next line if width is less
     );
+  }
+}
+
+void logDebugMsg(String message) {
+  if (kDebugMode) {
+    debugPrint(message);
   }
 }

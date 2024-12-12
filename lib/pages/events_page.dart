@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:crc_app/Api/api.dart';
 import 'package:crc_app/CustomWidgets/calandar_widget.dart';
 import 'package:crc_app/CustomWidgets/dates_widget.dart';
+import 'package:crc_app/CustomWidgets/legend.dart';
 import 'package:crc_app/CustomWidgets/snack_bar.dart';
 import 'package:crc_app/main.dart';
 import 'package:crc_app/pages/add_event_page.dart';
@@ -25,6 +26,7 @@ class EventsPage extends StatefulWidget {
 class _EventsPageState extends State<EventsPage> {
   bool? isAdmin;
   bool isLoading = false;
+  bool networkError = false;
   DateTime currentDate = DateTime.now();
   Map<int, String> currentMonthDatesMap = {};
   List<Map<String, DateTime>> currentEventTimes = [];
@@ -92,26 +94,26 @@ class _EventsPageState extends State<EventsPage> {
     return Scaffold(
       backgroundColor: prussianBlue,
       appBar: AppBar(
-        backgroundColor: prussianBlue,
-        leading: IconButton(
-          onPressed: () {
-            //clearing the events
-            context.read<UserStatusProvider>().clearEvents();
-            Navigator.pop(context);
-          },
-          icon: const Icon(
-            Icons.arrow_back_ios_rounded,
-            color: Colors.white,
+          backgroundColor: prussianBlue,
+          leading: IconButton(
+            onPressed: () {
+              //clearing the events
+              context.read<UserStatusProvider>().clearEvents();
+              Navigator.pop(context);
+            },
+            icon: const Icon(
+              Icons.arrow_back_ios_rounded,
+              color: Colors.white,
+            ),
+            // iconSize: deviceWidth * 0.08,
+            iconSize: 20,
           ),
-          // iconSize: deviceWidth * 0.08,
-          iconSize: 20,
-        ),
-        centerTitle: true,
-        title: Text(
-          "CRC ${widget.floorNumber}-${widget.roomNumber}",
-          style: heading(),
-        ),
-      ),
+          centerTitle: true,
+          title: Text(
+            "CRC ${widget.floorNumber}-${widget.roomNumber}",
+            style: heading(),
+          ),
+          actions: [refreshIcon()]),
       body: Container(
         width: deviceWidth,
         height: deviceHeight - appBarHeight,
@@ -189,20 +191,29 @@ class _EventsPageState extends State<EventsPage> {
             const SizedBox(
               height: 5,
             ),
-            Text(
-              "Events",
-              style: dateStyle(deviceWidth),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "Events",
+                  style: dateStyle(deviceWidth),
+                ),
+                ColorCodedLegend()
+              ],
             ),
             const SizedBox(
-              height: 20,
+              height: 10,
             ),
-            isLoading
-                ? loadingIndicatorWidget()
-                : Expanded(
-                    child: CalandarWidget(
-                    currentDate: currentDate,
-                    eventsMap: eventData,
-                  ))
+            if (isLoading)
+              loadingIndicatorWidget()
+            else if (networkError)
+              networkErrorWidget(deviceHeight, deviceWidth, boxPadding)
+            else
+              Expanded(
+                  child: CalandarWidget(
+                currentDate: currentDate,
+                eventsMap: eventData,
+              ))
           ],
         ),
       ),
@@ -236,8 +247,9 @@ class _EventsPageState extends State<EventsPage> {
   }
 
   Future<void> loadData(BuildContext context) async {
+    networkError = true;
     logDebugMsg("Loading data");
-    String snackbarText = "Server Error";
+    String snackbarText = "Network Error";
     //!Data related
     final provider =
         navigatorKey.currentState!.context.read<UserStatusProvider>();
@@ -259,6 +271,7 @@ class _EventsPageState extends State<EventsPage> {
 
       if (fetchedData != null) {
         provider.setEventDataList(fetchedData);
+        networkError = false;
       } else {
         logDebugMsg("show snakbar");
         showSnackBar(context, snackbarText);
@@ -326,13 +339,84 @@ class _EventsPageState extends State<EventsPage> {
     }
   }
 
-  Widget loadingIndicatorWidget() {
-    return Center(
-      child: SizedBox(
-        height: 30,
-        width: 30,
-        child: CircularProgressIndicator(
-          color: prussianBlue,
+  void refreshPage() async {
+    setState(() {
+      isLoading = true;
+    });
+    await loadData(context);
+  }
+
+  Container refreshIcon() {
+    return Container(
+        margin: const EdgeInsets.only(right: 20),
+        child: IconButton(
+            onPressed: () => refreshPage(),
+            icon: Icon(
+              Icons.refresh_outlined,
+              color: Colors.white,
+              size: 24,
+            )));
+  }
+
+  Expanded loadingIndicatorWidget() {
+    return Expanded(
+      child: Center(
+        child: SizedBox(
+          height: 30,
+          width: 30,
+          child: CircularProgressIndicator(
+            color: prussianBlue,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Expanded networkErrorWidget(
+      double deviceHeight, double deviceWidth, double boxPadding) {
+    return Expanded(
+      child: Container(
+        width: deviceWidth - 2 * boxPadding,
+        // color: Colors.yellow,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            SizedBox(
+                height: (deviceHeight) * 0.3,
+                child: Image.asset("assets/images/internetError.png")),
+            Column(
+              children: [
+                Text(
+                  "Something went wrong",
+                  style: TextStyle(
+                      color: prussianBlue,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(
+                  height: 10,
+                ),
+                const Text(
+                  "Check your connection, then refresh the page.",
+                  style: TextStyle(color: Colors.grey, fontSize: 14),
+                ),
+              ],
+            ),
+            OutlinedButton(
+                onPressed: () => refreshPage(),
+                child: Text(
+                  "Refresh",
+                  style: TextStyle(
+                      color: prussianBlue, fontWeight: FontWeight.bold),
+                ),
+                style: OutlinedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  side: BorderSide(
+                    color: prussianBlue,
+                  ),
+                ))
+          ],
         ),
       ),
     );
