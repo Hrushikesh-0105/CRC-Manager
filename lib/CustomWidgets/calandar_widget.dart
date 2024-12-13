@@ -51,15 +51,24 @@ class _CalandarWidgetState extends State<CalandarWidget> {
     return SfCalendar(
       headerHeight: 0,
       viewHeaderHeight: 0,
+      //changes
+      // view: CalendarView.day,
 
+      // scheduleViewSettings: const ScheduleViewSettings(
+      //     hideEmptyScheduleWeek: true,
+      //     monthHeaderSettings: MonthHeaderSettings(
+      //       height: 0,
+      //     ),
+      //     weekHeaderSettings: WeekHeaderSettings(height: 0)),
+      //changes
       backgroundColor: backgroundColor,
       minDate: DateTime(widget.currentDate.year, widget.currentDate.month,
           widget.currentDate.day, 8),
       maxDate: DateTime(widget.currentDate.year, widget.currentDate.month,
           widget.currentDate.day, 20),
       timeSlotViewSettings: const TimeSlotViewSettings(
-        startHour: 7.0, // Start displaying from 8 a.m.
-        endHour: 21.0, // End displaying at 8 p.m.
+        startHour: 7.0, // Start displaying from 8 am
+        endHour: 21.0, // End displaying at 8 pm
         timeIntervalHeight: 60,
         timeInterval: Duration(hours: 1),
       ),
@@ -84,8 +93,6 @@ class _CalandarWidgetState extends State<CalandarWidget> {
                   currentEventMap: currentEvent, isAdmin: isAdmin!);
             });
       },
-      // cellBorderColor: prussianBlue,
-      //data
       dataSource: EventDataSource(diaplayEventsList),
       appointmentTextStyle: const TextStyle(
         fontSize: 14, // Custom font size
@@ -379,6 +386,7 @@ class _EventDialogBoxState extends State<EventDialogBox> {
   }
 
   Future<bool> deleteEvent(String id) async {
+    SnackbarType snakbarTextType = SnackbarType.error;
     bool eventDeleted;
     String snakbarText = "Failed to delete";
     if (kDebugMode) {
@@ -386,6 +394,7 @@ class _EventDialogBoxState extends State<EventDialogBox> {
     }
     try {
       //TODO delete here
+
       eventDeleted = await ApiService().deleteData(id);
       if (eventDeleted) {
         final provider =
@@ -401,15 +410,13 @@ class _EventDialogBoxState extends State<EventDialogBox> {
         logDebugMsg("$e");
       }
     }
-    if (eventDeleted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        customSnackBar(snakbarText),
-      );
-    }
+    if (eventDeleted) snakbarTextType = SnackbarType.success;
+    showSnackBar(context, snakbarText, snakbarTextType);
     return eventDeleted;
   }
 
   Future<bool> verifyOtp(String id, String enteredOtp, String actualOtp) async {
+    SnackbarType snakbarTextType = SnackbarType.error;
     bool verified = false;
     String snakbarText = "Wrong Otp";
     //TODO check enteered otp
@@ -420,7 +427,6 @@ class _EventDialogBoxState extends State<EventDialogBox> {
           final provider =
               navigatorKey.currentState!.context.read<UserStatusProvider>();
           provider.updateEventStatusById(id, "inUse");
-          verified = true;
           snakbarText = "Otp Verified";
         } else {
           snakbarText = "NetWork Error";
@@ -430,13 +436,13 @@ class _EventDialogBoxState extends State<EventDialogBox> {
         logDebugMsg("$e");
       }
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      customSnackBar(snakbarText),
-    );
+    if (verified) snakbarTextType = SnackbarType.success;
+    showSnackBar(context, snakbarText, snakbarTextType);
     return verified;
   }
 
   Future<bool> returnKeys(String id) async {
+    SnackbarType snakbarTextType = SnackbarType.error;
     bool keysReturned = false;
     String snakbarText = "Keys Not Returned";
     try {
@@ -446,15 +452,13 @@ class _EventDialogBoxState extends State<EventDialogBox> {
             navigatorKey.currentState!.context.read<UserStatusProvider>();
         provider.updateEventStatusById(id, "free");
         snakbarText = "Keys Returned";
-        keysReturned = true;
       }
     } catch (e) {
       snakbarText = "NetWork Error";
       logDebugMsg("$e");
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      customSnackBar(snakbarText),
-    );
+    if (keysReturned) snakbarTextType = SnackbarType.success;
+    showSnackBar(context, snakbarText, snakbarTextType);
     return keysReturned;
   }
 }
@@ -489,4 +493,11 @@ void logDebugMsg(String message) {
   if (kDebugMode) {
     debugPrint(message);
   }
+}
+
+void showSnackBar(
+    BuildContext context, String snackbarText, SnackbarType typeOfMessage) {
+  ScaffoldMessenger.of(context).showSnackBar(
+      CustomSnackbar(message: snackbarText, type: typeOfMessage)
+          .build(context));
 }

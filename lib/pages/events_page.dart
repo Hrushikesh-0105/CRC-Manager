@@ -3,6 +3,8 @@ import 'package:crc_app/Api/api.dart';
 import 'package:crc_app/CustomWidgets/calandar_widget.dart';
 import 'package:crc_app/CustomWidgets/dates_widget.dart';
 import 'package:crc_app/CustomWidgets/legend.dart';
+import 'package:crc_app/CustomWidgets/network_error_widget.dart';
+import 'package:crc_app/CustomWidgets/no_events_widget.dart';
 import 'package:crc_app/CustomWidgets/snack_bar.dart';
 import 'package:crc_app/main.dart';
 import 'package:crc_app/pages/add_event_page.dart';
@@ -82,7 +84,41 @@ class _EventsPageState extends State<EventsPage> {
     double deviceHeight = MediaQuery.of(context).size.height;
     double appBarHeight = AppBar().preferredSize.height;
     double boxPadding = deviceWidth * 0.05;
-
+    //!Test
+    // final provider =
+    //     navigatorKey.currentState!.context.read<UserStatusProvider>();
+    // provider.clearEvents();
+    // DateTime testDate = DateTime(2024, 12, 13);
+    // String eventDateString = DateFormat('yyyy-MM-dd').format(testDate);
+    // DateTime startDate = DateTime(
+    //   testDate.year,
+    //   testDate.month,
+    //   testDate.day,
+    //   15, // Hours (e.g., 3 PM)
+    //   0, // Minutes
+    //   0, // Seconds
+    // );
+    // DateTime endDate = DateTime(
+    //   testDate.year,
+    //   testDate.month,
+    //   testDate.day,
+    //   17, // Hours (e.g., 3 PM)
+    //   0, // Minutes
+    //   0, // Seconds
+    // );
+    // Map<String, dynamic> eventMap = {
+    //   "_id": "1234",
+    //   "EventName": "Axis",
+    //   "OrganiserName": "Hrushikesh",
+    //   // "MobileNumber": mobileNumberTextField.text.trim(),
+    //   "Date": eventDateString,
+    //   "BookedFrom": startDate.toString(),
+    //   "BookedTill": endDate.toString(),
+    //   "RoomName": "${widget.floorNumber}-${widget.roomNumber}",
+    //   "Status": "inUse",
+    // };
+    // provider.addEventData(eventMap);
+    //!Test
     //! DATA related
     currentEventTimes.clear();
     //widget rebuilds if event data is changed
@@ -189,7 +225,7 @@ class _EventsPageState extends State<EventsPage> {
               ),
             ),
             const SizedBox(
-              height: 5,
+              height: 10,
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -198,7 +234,7 @@ class _EventsPageState extends State<EventsPage> {
                   "Events",
                   style: dateStyle(deviceWidth),
                 ),
-                ColorCodedLegend()
+                const ColorCodedLegend()
               ],
             ),
             const SizedBox(
@@ -207,7 +243,9 @@ class _EventsPageState extends State<EventsPage> {
             if (isLoading)
               loadingIndicatorWidget()
             else if (networkError)
-              networkErrorWidget(deviceHeight, deviceWidth, boxPadding)
+              NetworkErrorWidget(refreshPage: refreshPage)
+            else if (eventData.isEmpty)
+              const NoEventsWidget()
             else
               Expanded(
                   child: CalandarWidget(
@@ -247,6 +285,7 @@ class _EventsPageState extends State<EventsPage> {
   }
 
   Future<void> loadData(BuildContext context) async {
+    SnackbarType snackbartextType = SnackbarType.error;
     networkError = true;
     logDebugMsg("Loading data");
     String snackbarText = "Network Error";
@@ -274,11 +313,11 @@ class _EventsPageState extends State<EventsPage> {
         networkError = false;
       } else {
         logDebugMsg("show snakbar");
-        showSnackBar(context, snackbarText);
+        showSnackBar(context, snackbarText, snackbartextType);
       }
     } catch (e) {
       logDebugMsg("Error in fetching data: $e");
-      showSnackBar(context, snackbarText);
+      showSnackBar(context, snackbarText, snackbartextType);
     }
     //!Data related
     setState(() {
@@ -371,56 +410,6 @@ class _EventsPageState extends State<EventsPage> {
       ),
     );
   }
-
-  Expanded networkErrorWidget(
-      double deviceHeight, double deviceWidth, double boxPadding) {
-    return Expanded(
-      child: Container(
-        width: deviceWidth - 2 * boxPadding,
-        // color: Colors.yellow,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            SizedBox(
-                height: (deviceHeight) * 0.3,
-                child: Image.asset("assets/images/internetError.png")),
-            Column(
-              children: [
-                Text(
-                  "Something went wrong",
-                  style: TextStyle(
-                      color: prussianBlue,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(
-                  height: 10,
-                ),
-                const Text(
-                  "Check your connection, then refresh the page.",
-                  style: TextStyle(color: Colors.grey, fontSize: 14),
-                ),
-              ],
-            ),
-            OutlinedButton(
-                onPressed: () => refreshPage(),
-                child: Text(
-                  "Refresh",
-                  style: TextStyle(
-                      color: prussianBlue, fontWeight: FontWeight.bold),
-                ),
-                style: OutlinedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  side: BorderSide(
-                    color: prussianBlue,
-                  ),
-                ))
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 void logDebugMsg(String message) {
@@ -429,8 +418,9 @@ void logDebugMsg(String message) {
   }
 }
 
-void showSnackBar(BuildContext context, String snackbarText) {
+void showSnackBar(
+    BuildContext context, String snackbarText, SnackbarType typeOfMessage) {
   ScaffoldMessenger.of(context).showSnackBar(
-    customSnackBar(snackbarText),
-  );
+      CustomSnackbar(message: snackbarText, type: typeOfMessage)
+          .build(context));
 }

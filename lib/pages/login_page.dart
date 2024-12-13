@@ -193,6 +193,7 @@ class LoginPageState extends State<LoginPage> {
   Future<bool> _login() async {
     bool loggedIn = false;
     String snakbarText = "";
+    SnackbarType snakbarTextType = SnackbarType.error;
     String typedMobileNo = _mobileNumberController.text.trim();
     String typedPassword = _passwordController.text.trim();
     if (_formKey.currentState!.validate()) {
@@ -203,12 +204,12 @@ class LoginPageState extends State<LoginPage> {
             .authenticateLogin(typedMobileNo, typedPassword)
             .timeout(timeoutDuration, onTimeout: () {
           // This function is called if the operation takes too long
-          snakbarText = "Login in Timed out";
+          snakbarText = "Connection timed out";
           throw TimeoutException("Connection timed out");
         });
       } catch (e) {
         logDebugMsg("Error:$e");
-        snakbarText = "Connection Failed";
+        snakbarText = "Network Error";
       }
       if (statusCode == 200) {
         await setUser(true); //setting user as admin in shared preferences
@@ -224,11 +225,8 @@ class LoginPageState extends State<LoginPage> {
         snakbarText = "Connection Failed";
         logDebugMsg("Error here");
       }
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          customSnackBar(snakbarText),
-        );
-      }
+      if (loggedIn) snakbarTextType = SnackbarType.success;
+      showSnackBar(context, snakbarText, snakbarTextType);
     }
     return loggedIn;
   }
@@ -250,4 +248,11 @@ void logDebugMsg(String message) {
   if (kDebugMode) {
     debugPrint(message);
   }
+}
+
+void showSnackBar(
+    BuildContext context, String snackbarText, SnackbarType typeOfMessage) {
+  ScaffoldMessenger.of(context).showSnackBar(
+      CustomSnackbar(message: snackbarText, type: typeOfMessage)
+          .build(context));
 }
