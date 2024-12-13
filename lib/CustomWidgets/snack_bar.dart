@@ -1,32 +1,3 @@
-// import 'package:flutter/material.dart';
-// import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
-
-// SnackBar customSnackBar(String message) {
-//   return SnackBar(
-//     elevation: 0,
-//     backgroundColor: Colors.transparent,
-//     content: AwesomeSnackbarContent(
-//         title: message, message: "", contentType: ContentType.success),
-//     duration: const Duration(milliseconds: 5000),
-//     // shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
-//     // backgroundColor: Color(0xff333333),
-//     behavior: SnackBarBehavior.floating,
-//     // margin: const EdgeInsets.all(40),
-//     // width: 20,
-//   );
-// }
-
-// Center(
-//   child: Text(
-//     message,
-//     style: const TextStyle(
-//       fontSize: 16,
-//       // fontFamily: customfontFamily,
-//       color: Color(0xffF8F8F8),
-//     ),
-//   ),
-// )
-
 import 'package:crc_app/styles.dart';
 import 'package:flutter/material.dart';
 
