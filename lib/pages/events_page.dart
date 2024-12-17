@@ -9,6 +9,7 @@ import 'package:crc_app/CustomWidgets/snack_bar.dart';
 import 'package:crc_app/main.dart';
 import 'package:crc_app/pages/add_event_page.dart';
 import 'package:crc_app/styles.dart';
+import 'package:crc_app/userStatusProvider/db_keys_room_status.dart';
 import 'package:crc_app/userStatusProvider/user_and_event_provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -16,10 +17,8 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 
 class EventsPage extends StatefulWidget {
-  final int floorNumber;
-  final int roomNumber;
-  const EventsPage(
-      {required this.floorNumber, required this.roomNumber, super.key});
+  final String roomName;
+  const EventsPage({required this.roomName, super.key});
 
   @override
   State<EventsPage> createState() => _EventsPageState();
@@ -30,6 +29,7 @@ class _EventsPageState extends State<EventsPage> {
   bool isLoading = false;
   bool networkError = false;
   DateTime currentDate = DateTime.now();
+  DateTime todaysDate = DateTime.now();
   Map<int, String> currentMonthDatesMap = {};
   List<Map<String, DateTime>> currentEventTimes = [];
   ScrollController dateScrollController =
@@ -63,7 +63,6 @@ class _EventsPageState extends State<EventsPage> {
   void initState() {
     super.initState();
     updateDateMap();
-    // animateScroller();
     final provider =
         navigatorKey.currentState!.context.read<UserStatusProvider>();
     isAdmin = provider.isAdmin;
@@ -112,9 +111,9 @@ class _EventsPageState extends State<EventsPage> {
     //   "OrganiserName": "Hrushikesh",
     //   // "MobileNumber": mobileNumberTextField.text.trim(),
     //   "Date": eventDateString,
-    //   "BookedFrom": startDate.toString(),
-    //   "BookedTill": endDate.toString(),
-    //   "RoomName": "${widget.floorNumber}-${widget.roomNumber}",
+    //   DBKeys.startTime: startDate.toString(),
+    //   DBKeys.endTime: endDate.toString(),
+    //   "RoomName": "${widget.roomName}",
     //   "Status": "inUse",
     // };
     // provider.addEventData(eventMap);
@@ -146,7 +145,7 @@ class _EventsPageState extends State<EventsPage> {
           ),
           centerTitle: true,
           title: Text(
-            "CRC ${widget.floorNumber}-${widget.roomNumber}",
+            "CRC ${widget.roomName}",
             style: heading(),
           ),
           actions: [refreshIcon()]),
@@ -186,7 +185,7 @@ class _EventsPageState extends State<EventsPage> {
             ),
             //selecting dates scroll view
             SizedBox(
-              height: 56,
+              height: 50,
               child: SizedBox(
                 width: deviceWidth - 2 * boxPadding,
                 child: ListView.builder(
@@ -228,11 +227,12 @@ class _EventsPageState extends State<EventsPage> {
               height: 10,
             ),
             Row(
+              // crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  "Events",
-                  style: dateStyle(deviceWidth),
+                  "Events (${eventData.length})",
+                  style: eventTextStyle(deviceWidth),
                 ),
                 const ColorCodedLegend()
               ],
@@ -256,7 +256,7 @@ class _EventsPageState extends State<EventsPage> {
         ),
       ),
       floatingActionButton: Visibility(
-        visible: isAdmin!,
+        visible: visibilityOfAddEvent(),
         child: FloatingActionButton(
           onPressed: () {
             showModalBottomSheet(
@@ -265,8 +265,7 @@ class _EventsPageState extends State<EventsPage> {
                 builder: (BuildContext context) {
                   return AddEventPage(
                     eventDate: currentDate,
-                    floorNumber: widget.floorNumber,
-                    roomNumber: widget.roomNumber,
+                    roomName: widget.roomName,
                     currentEventTimes: currentEventTimes,
                   );
                 });
@@ -295,11 +294,10 @@ class _EventsPageState extends State<EventsPage> {
     provider.clearEvents();
     currentEventTimes.clear();
     String eventDateString = DateFormat('yyyy-MM-dd').format(currentDate);
-    String roomName = "${widget.floorNumber}-${widget.roomNumber}";
     try {
-      const timeoutDuration = Duration(seconds: 10);
+      const timeoutDuration = Duration(seconds: 15);
       List<Map<String, dynamic>>? fetchedData = await ApiService()
-          .getData(roomName, eventDateString)
+          .getData(widget.roomName, eventDateString)
           .timeout(timeoutDuration, onTimeout: () {
         // This function is called if the operation takes too long
         snackbarText = "Connection Timed out";
@@ -368,10 +366,10 @@ class _EventsPageState extends State<EventsPage> {
   void createCurrentEventTimesList(
       List<Map<String, dynamic>> currentEventsList) {
     for (var event in currentEventsList) {
-      DateTime bookedFrom = DateTime.parse(event["BookedFrom"]);
-      DateTime bookedTill = DateTime.parse(event["BookedTill"]);
+      DateTime bookedFrom = DateTime.parse(event[DBKeys.startTime]);
+      DateTime bookedTill = DateTime.parse(event[DBKeys.endTime]);
       currentEventTimes
-          .add({'BookedFrom': bookedFrom, 'BookedTill': bookedTill});
+          .add({DBKeys.startTime: bookedFrom, DBKeys.endTime: bookedTill});
     }
     if (kDebugMode) {
       print(currentEventTimes);
@@ -385,12 +383,21 @@ class _EventsPageState extends State<EventsPage> {
     await loadData(context);
   }
 
+  bool visibilityOfAddEvent() {
+    DateTime todaysDateOnly =
+        DateTime(todaysDate.year, todaysDate.month, todaysDate.day);
+    bool visibility = isAdmin! &&
+        (currentDate.isAfter(todaysDateOnly) ||
+            currentDate.isAtSameMomentAs(todaysDateOnly));
+    return visibility;
+  }
+
   Container refreshIcon() {
     return Container(
         margin: const EdgeInsets.only(right: 20),
         child: IconButton(
             onPressed: () => refreshPage(),
-            icon: Icon(
+            icon: const Icon(
               Icons.refresh_outlined,
               color: Colors.white,
               size: 24,

@@ -88,7 +88,7 @@ class _FloorsPageState extends State<FloorsPage> {
         onPressed: () async {
           await removeUserStatusFromPrefsAndProvider();
           Navigator.pushReplacement(context,
-              MaterialPageRoute(builder: (context) => ChooseUserPage()));
+              MaterialPageRoute(builder: (context) => const ChooseUserPage()));
         },
         icon: const Icon(Icons.logout_outlined, color: Colors.white, size: 20));
   }

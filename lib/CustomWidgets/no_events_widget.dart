@@ -27,7 +27,7 @@ class _NoEventsWidgetState extends State<NoEventsWidget> {
               height: 20,
             ),
             Text(
-              "No events for today",
+              "No events on this day",
               style: TextStyle(
                   color: prussianBlue,
                   fontSize: 20,

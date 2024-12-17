@@ -11,35 +11,38 @@ Widget dateWidget(int date, String day, Color boxColor, double deviceWidth) {
   }
   return Container(
     //make padding and margin responsive
-    padding: const EdgeInsets.all(5),
     margin: const EdgeInsets.fromLTRB(2, 0, 2, 0),
-    // width: deviceWidth * 0.13,
     width: 40,
     decoration:
-        BoxDecoration(color: boxColor, borderRadius: BorderRadius.circular(50)),
+        BoxDecoration(color: boxColor, borderRadius: BorderRadius.circular(20)),
     child: Column(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
           "$date",
-          style: dateTextStyle(deviceWidth, textColor),
+          style: dateTextStyle1(deviceWidth, textColor),
         ),
         const SizedBox(
           height: 6,
         ),
-        Text(day,
-            style: dateTextStyle(deviceWidth, textColor)
-                .copyWith(fontWeight: FontWeight.normal))
+        Text(day, style: dateTextStyle2(deviceWidth, textColor))
       ],
     ),
   );
 }
 
-TextStyle dateTextStyle(double deviceWidth, Color textColor) {
+TextStyle dateTextStyle1(double deviceWidth, Color textColor) {
   return TextStyle(
       // deviceWidth * 0.042
-      fontSize: 13,
+      fontSize: 12,
       fontWeight: FontWeight.bold,
+      color: textColor);
+}
+
+TextStyle dateTextStyle2(double deviceWidth, Color textColor) {
+  return TextStyle(
+      // deviceWidth * 0.042
+      fontSize: 10,
       color: textColor);
 }
 

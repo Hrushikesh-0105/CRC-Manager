@@ -80,7 +80,11 @@ class LoginPageState extends State<LoginPage> {
                     deviceWidth * 0.10,
                     deviceHeight * 0.05),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(20),
+                      topRight: Radius.circular(20),
+                      bottomLeft: Radius.zero,
+                      bottomRight: Radius.zero),
                   color: backgroundColor,
                 ),
                 child: Form(

@@ -22,7 +22,16 @@ TextStyle heading() {
 TextStyle dateStyle(double deviceWidth) {
   //font size deviceWidth * 0.07
   return const TextStyle(
-      fontSize: 21,
+      fontSize: 20,
+      // fontFamily: customfontFamily,
+      fontWeight: FontWeight.bold,
+      color: Color(0xff222222));
+}
+
+TextStyle eventTextStyle(double deviceWidth) {
+  //font size deviceWidth * 0.07
+  return const TextStyle(
+      fontSize: 16,
       // fontFamily: customfontFamily,
       fontWeight: FontWeight.bold,
       color: Color(0xff222222));

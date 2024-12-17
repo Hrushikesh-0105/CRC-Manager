@@ -18,19 +18,21 @@ class ColorCodedLegend extends StatelessWidget {
   }
 
   Widget _buildLegendItem(Color color, String label) {
-    return Row(
-      children: [
-        Container(
-          width: 20,
-          height: 20,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(5),
-          ),
+    return Container(
+      // width: 20,
+      height: 20,
+      padding: const EdgeInsets.fromLTRB(6, 0, 6, 0),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(5),
+      ),
+      child: Center(
+        child: Text(
+          label,
+          style: const TextStyle(
+              fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
         ),
-        const SizedBox(width: 8),
-        Text(label),
-      ],
+      ),
     );
   }
 }

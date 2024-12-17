@@ -13,14 +13,14 @@ class CustomSnackbar {
   });
 
   // Color mapping for different snackbar types
-  Color _getBackgroundColor() {
-    Color bgColor;
+  Color _getColor() {
+    Color textColor;
     if (type == SnackbarType.success) {
-      bgColor = Colors.green;
+      textColor = Colors.green;
     } else {
-      bgColor = prussianBlue;
+      textColor = Colors.red;
     }
-    return bgColor;
+    return textColor;
   }
 
   // Icon mapping for different snackbar types
@@ -43,7 +43,8 @@ class CustomSnackbar {
         height: 60,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: _getBackgroundColor(),
+          color: backgroundColor,
+          border: Border.all(color: Colors.black),
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
@@ -58,7 +59,7 @@ class CustomSnackbar {
             // Icon on the left
             Icon(
               _getIcon(),
-              color: Colors.white,
+              color: _getColor(),
               size: 28,
             ),
             const SizedBox(width: 16),
@@ -68,7 +69,7 @@ class CustomSnackbar {
               child: Text(
                 message,
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: Colors.black,
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
                 ),
@@ -83,7 +84,7 @@ class CustomSnackbar {
       behavior: SnackBarBehavior.floating,
       backgroundColor: Colors.transparent,
       elevation: 0,
-      margin: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(top: 50, left: 16, right: 16),
     );
   }
 }

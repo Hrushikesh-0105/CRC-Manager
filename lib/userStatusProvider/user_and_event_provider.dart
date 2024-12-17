@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-//TODO change class name
 class UserStatusProvider extends ChangeNotifier {
   bool _isAdmin = false;
   List<Map<String, dynamic>> _userEventData = [];

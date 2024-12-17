@@ -1,7 +1,9 @@
+import 'package:crc_app/CustomWidgets/snack_bar.dart';
 import 'package:intl/intl.dart';
 import 'package:crc_app/Api/api.dart';
 import 'package:crc_app/main.dart';
 import 'package:crc_app/userStatusProvider/user_and_event_provider.dart';
+import 'package:crc_app/userStatusProvider/db_keys_room_status.dart';
 import 'package:crc_app/styles.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -9,14 +11,12 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 class AddEventPage extends StatefulWidget {
-  final floorNumber;
-  final roomNumber;
+  final String roomName;
   final DateTime eventDate;
   final List<Map<String, DateTime>> currentEventTimes;
   const AddEventPage(
       {required this.eventDate,
-      required this.floorNumber,
-      required this.roomNumber,
+      required this.roomName,
       required this.currentEventTimes,
       super.key});
 
@@ -27,30 +27,42 @@ class AddEventPage extends StatefulWidget {
 class _AddEventPageState extends State<AddEventPage> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   //textfield controllers
-  TextEditingController eventnameTextField = TextEditingController();
-  TextEditingController organiserNameTextField = TextEditingController();
-  TextEditingController mobileNumberTextField = TextEditingController();
-  TextEditingController eventDateTextField = TextEditingController();
-  TextEditingController eventStartTimeTextField = TextEditingController();
-  TextEditingController eventEndTimeTextField = TextEditingController();
-  TextEditingController classroomTextField = TextEditingController();
+  final TextEditingController _eventnameTextField = TextEditingController();
+  final TextEditingController _organiserNameTextField = TextEditingController();
+  final TextEditingController _mobileNumberTextField = TextEditingController();
+  final TextEditingController _eventDateTextField = TextEditingController();
+  final TextEditingController _classroomTextField = TextEditingController();
 
   //date and time
-  List<DateTime> possibleStartTimes = [];
-  List<DateTime> possibleEndTimes = [];
+  List<DateTime> _possibleStartTimes = [];
+  List<DateTime> _possibleEndTimes = [];
   DateTime? _selectedStartTime;
   DateTime? _selectedEndTime;
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    possibleStartTimes = generatePossibleStartTimes(widget.currentEventTimes);
+    _possibleStartTimes = generatePossibleStartTimes(widget.currentEventTimes);
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    disposeControllers([
+      _eventnameTextField,
+      _organiserNameTextField,
+      _mobileNumberTextField,
+      _eventDateTextField,
+      _classroomTextField,
+    ]);
   }
 
   @override
   Widget build(BuildContext context) {
-    classroomTextField.text = "${widget.floorNumber}-${widget.roomNumber}";
-    eventDateTextField.text = DateFormat('dd-MM-yyyy').format(widget.eventDate);
+    _classroomTextField.text = widget.roomName;
+    _eventDateTextField.text =
+        DateFormat('dd-MM-yyyy').format(widget.eventDate);
     double deviceWidth = MediaQuery.of(context).size.width;
     double deviceHeight = MediaQuery.of(context).size.height;
     double boxPadding = deviceWidth * 0.05;
@@ -75,7 +87,7 @@ class _AddEventPageState extends State<AddEventPage> {
               children: [
                 //event name textfield
                 TextFormField(
-                  controller: eventnameTextField,
+                  controller: _eventnameTextField,
                   inputFormatters: [LengthLimitingTextInputFormatter(20)],
                   decoration:
                       textfieldstyle1(Icons.event_note_outlined, "Event Name"),
@@ -92,7 +104,7 @@ class _AddEventPageState extends State<AddEventPage> {
                   height: 12,
                 ),
                 TextFormField(
-                  controller: organiserNameTextField,
+                  controller: _organiserNameTextField,
                   inputFormatters: [LengthLimitingTextInputFormatter(20)],
                   decoration: textfieldstyle1(
                       Icons.person_outline_rounded, "Organiser Name"),
@@ -109,7 +121,7 @@ class _AddEventPageState extends State<AddEventPage> {
                   height: 12,
                 ),
                 TextFormField(
-                  controller: mobileNumberTextField,
+                  controller: _mobileNumberTextField,
                   keyboardType: TextInputType.number,
                   inputFormatters: [
                     LengthLimitingTextInputFormatter(10),
@@ -132,7 +144,7 @@ class _AddEventPageState extends State<AddEventPage> {
                   height: 12,
                 ),
                 TextFormField(
-                  controller: eventDateTextField,
+                  controller: _eventDateTextField,
                   readOnly: true,
                   decoration: textfieldstyle1(
                       Icons.edit_calendar_rounded, "Event Date"),
@@ -150,8 +162,8 @@ class _AddEventPageState extends State<AddEventPage> {
                         decoration:
                             textfieldstyle1(Icons.timer_sharp, "Start Time"),
                         itemHeight: 56,
-                        items: possibleStartTimes.isNotEmpty
-                            ? possibleStartTimes.map((time) {
+                        items: _possibleStartTimes.isNotEmpty
+                            ? _possibleStartTimes.map((time) {
                                 // Convert the time to a 12-hour format and append AM/PM
                                 int displayHour = time.hour %
                                     12; // Converts hour to 12-hour format
@@ -177,16 +189,16 @@ class _AddEventPageState extends State<AddEventPage> {
                                   ),
                                 )
                               ],
-                        onChanged: possibleStartTimes.isNotEmpty
+                        onChanged: _possibleStartTimes.isNotEmpty
                             ? (value) {
                                 setState(() {
                                   _selectedStartTime = value;
-                                  possibleEndTimes.clear();
+                                  _possibleEndTimes.clear();
                                   _selectedEndTime = null;
-                                  possibleEndTimes = generatePossibleEndTimes(
+                                  _possibleEndTimes = generatePossibleEndTimes(
                                       value!, widget.currentEventTimes);
                                   if (kDebugMode) {
-                                    print(possibleEndTimes);
+                                    print(_possibleEndTimes);
                                   }
                                 });
                               }
@@ -206,9 +218,9 @@ class _AddEventPageState extends State<AddEventPage> {
                         decoration: textfieldstyle1(
                             Icons.timer_off_outlined, "End Time"),
                         itemHeight: 56,
-                        items: possibleEndTimes
+                        items: _possibleEndTimes
                                 .isNotEmpty // Check if the list is not empty
-                            ? possibleEndTimes.map((time) {
+                            ? _possibleEndTimes.map((time) {
                                 int displayHour = time.hour % 12;
                                 displayHour =
                                     displayHour == 0 ? 12 : displayHour;
@@ -230,7 +242,7 @@ class _AddEventPageState extends State<AddEventPage> {
                                   ),
                                 )
                               ],
-                        onChanged: possibleEndTimes
+                        onChanged: _possibleEndTimes
                                 .isNotEmpty // Enable only if the list is not empty
                             ? (value) {
                                 setState(() {
@@ -248,7 +260,7 @@ class _AddEventPageState extends State<AddEventPage> {
                   height: 10,
                 ),
                 TextFormField(
-                  controller: classroomTextField,
+                  controller: _classroomTextField,
                   enabled: false,
                   decoration: textfieldstyle1(Icons.room_outlined, "Classroom"),
                   style: style1(),
@@ -256,28 +268,38 @@ class _AddEventPageState extends State<AddEventPage> {
                 const SizedBox(
                   height: 12,
                 ),
-                ElevatedButton(
-                  onPressed: () async {
-                    bool eventCreated = await _createEvent();
-                    if (eventCreated) {
-                      Navigator.pop(context);
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    fixedSize:
-                        Size(deviceWidth - 2 * boxPadding, deviceHeight * 0.06),
-                    backgroundColor: prussianBlue,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      // Rounded corners
-                    ),
-                    elevation: 5,
-                  ),
-                  child: Text(
-                    'Create Event',
-                    style: TextStyle(fontSize: 18, color: backgroundColor),
-                  ),
-                )
+                _isLoading
+                    ? loadingIndicatorWidget()
+                    : ElevatedButton(
+                        onPressed: () async {
+                          setState(() {
+                            _isLoading = true;
+                          });
+                          bool eventCreated = await _createEvent();
+                          if (eventCreated) {
+                            Navigator.pop(context);
+                          } else {
+                            setState(() {
+                              _isLoading = false;
+                            });
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          fixedSize: Size(deviceWidth - 2 * boxPadding,
+                              deviceHeight * 0.06),
+                          backgroundColor: prussianBlue,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            // Rounded corners
+                          ),
+                          elevation: 5,
+                        ),
+                        child: Text(
+                          'Create Event',
+                          style:
+                              TextStyle(fontSize: 18, color: backgroundColor),
+                        ),
+                      )
               ],
             ),
           ),
@@ -286,19 +308,32 @@ class _AddEventPageState extends State<AddEventPage> {
     );
   }
 
+  Widget loadingIndicatorWidget() {
+    return Center(
+      child: SizedBox(
+        height: 20,
+        width: 20,
+        child: CircularProgressIndicator(
+          color: prussianBlue,
+        ),
+      ),
+    );
+  }
+
   List<DateTime> generatePossibleStartTimes(
       List<Map<String, DateTime>> eventTimes) {
-    List<DateTime> StartTimes = [];
+    List<DateTime> startTimes = [];
     DateTime eventDate = widget.eventDate;
     if (eventTimes.isEmpty) {
       for (int i = 8; i <= 19; i++) {
-        StartTimes.add(
-            DateTime(eventDate.year, eventDate.month, eventDate.day, i));
+        startTimes
+            .add(DateTime(eventDate.year, eventDate.month, eventDate.day, i));
       }
     }
     // Define the event window: 8:00 AM to 8:00 PM
     else {
-      eventTimes.sort((a, b) => a['BookedFrom']!.compareTo(b['BookedFrom']!));
+      eventTimes
+          .sort((a, b) => a[DBKeys.startTime]!.compareTo(b[DBKeys.startTime]!));
       if (kDebugMode) {
         print(eventTimes);
       }
@@ -312,10 +347,10 @@ class _AddEventPageState extends State<AddEventPage> {
       int mergeIndex = 0;
       int eventTimesLength = eventTimes.length;
       while (mergeIndex != eventTimesLength - 1) {
-        if (eventTimes[mergeIndex]["BookedTill"]!
-            .isAtSameMomentAs(eventTimes[mergeIndex + 1]["BookedFrom"]!)) {
-          eventTimes[mergeIndex]["BookedTill"] =
-              eventTimes[mergeIndex + 1]["BookedTill"]!;
+        if (eventTimes[mergeIndex][DBKeys.endTime]!
+            .isAtSameMomentAs(eventTimes[mergeIndex + 1][DBKeys.startTime]!)) {
+          eventTimes[mergeIndex][DBKeys.endTime] =
+              eventTimes[mergeIndex + 1][DBKeys.endTime]!;
           eventTimes.removeAt(mergeIndex + 1);
           eventTimesLength = eventTimesLength - 1;
         } else {
@@ -330,46 +365,47 @@ class _AddEventPageState extends State<AddEventPage> {
       //checking  event times
       for (int i = 0; i < 12; i++) {
         if (eventPointer >= eventTimesLength) {
-          StartTimes.add(totalStartTimes[i]);
+          startTimes.add(totalStartTimes[i]);
         } else if (totalStartTimes[i]
-            .isBefore(eventTimes[eventPointer]["BookedFrom"]!)) {
-          StartTimes.add(totalStartTimes[i]);
+            .isBefore(eventTimes[eventPointer][DBKeys.startTime]!)) {
+          startTimes.add(totalStartTimes[i]);
         } else if (totalStartTimes[i] ==
-                eventTimes[eventPointer]["BookedTill"]! ||
+                eventTimes[eventPointer][DBKeys.endTime]! ||
             totalStartTimes[i]
-                .isAfter(eventTimes[eventPointer]["BookedTill"]!)) {
-          StartTimes.add(totalStartTimes[i]);
+                .isAfter(eventTimes[eventPointer][DBKeys.endTime]!)) {
+          startTimes.add(totalStartTimes[i]);
           eventPointer++;
         }
       }
     }
     if (kDebugMode) {
-      print(StartTimes);
+      print(startTimes);
     }
-    return StartTimes;
+    return startTimes;
   }
 
   List<DateTime> generatePossibleEndTimes(
       DateTime selectedStartTime, List<Map<String, DateTime>> eventTimes) {
     // DateTime eventDate = widget.eventDate;
-    List<DateTime> EndTimes = [];
+    List<DateTime> endTimes = [];
     if (eventTimes.isEmpty) {
       for (int i = selectedStartTime.hour + 1; i <= 20; i++) {
-        EndTimes.add(DateTime(selectedStartTime.year, selectedStartTime.month,
+        endTimes.add(DateTime(selectedStartTime.year, selectedStartTime.month,
             selectedStartTime.day, i));
       }
     } else {
-      eventTimes.sort((a, b) => a['BookedFrom']!.compareTo(b['BookedFrom']!));
+      eventTimes
+          .sort((a, b) => a[DBKeys.startTime]!.compareTo(b[DBKeys.startTime]!));
       // print(eventTimes);
 
       //merging the event times
       int mergeIndex = 0;
       int eventTimesLength = eventTimes.length;
       while (mergeIndex != eventTimesLength - 1) {
-        if (eventTimes[mergeIndex]["BookedTill"]!
-            .isAtSameMomentAs(eventTimes[mergeIndex + 1]["BookedFrom"]!)) {
-          eventTimes[mergeIndex]["BookedTill"] =
-              eventTimes[mergeIndex + 1]["BookedTill"]!;
+        if (eventTimes[mergeIndex][DBKeys.endTime]!
+            .isAtSameMomentAs(eventTimes[mergeIndex + 1][DBKeys.startTime]!)) {
+          eventTimes[mergeIndex][DBKeys.endTime] =
+              eventTimes[mergeIndex + 1][DBKeys.endTime]!;
           eventTimes.removeAt(mergeIndex + 1);
           eventTimesLength = eventTimesLength - 1;
         } else {
@@ -384,8 +420,8 @@ class _AddEventPageState extends State<AddEventPage> {
 
       bool endTimeFound = false;
       for (int i = 0; i < eventTimesLength && !endTimeFound; i++) {
-        if (selectedStartTime.isBefore(eventTimes[i]["BookedFrom"]!)) {
-          lastEndTime = eventTimes[i]["BookedFrom"]!;
+        if (selectedStartTime.isBefore(eventTimes[i][DBKeys.startTime]!)) {
+          lastEndTime = eventTimes[i][DBKeys.startTime]!;
           endTimeFound = true;
         }
       }
@@ -394,34 +430,32 @@ class _AddEventPageState extends State<AddEventPage> {
             selectedStartTime.day, 20); //last end time is 8 pm==20
       }
       for (int i = selectedStartTime.hour + 1; i <= lastEndTime!.hour; i++) {
-        EndTimes.add(DateTime(selectedStartTime.year, selectedStartTime.month,
+        endTimes.add(DateTime(selectedStartTime.year, selectedStartTime.month,
             selectedStartTime.day, i));
       }
     }
-    return EndTimes;
+    return endTimes;
   }
 
   Future<bool> _createEvent() async {
+    String snakbarText = "Failed to create event";
+    SnackbarType snakbarTextType = SnackbarType.error;
     bool eventCreated = false;
     if (kDebugMode) {
       print("entered create Event function");
     }
     if (_formKey.currentState!.validate()) {
-      //TODO remove this random id
-      // final random = Random();
-      // int randomFourDigitNumber = 1000 + random.nextInt(9000);
       String eventDateString =
           DateFormat('yyyy-MM-dd').format(widget.eventDate);
       Map<String, dynamic> eventMap = {
-        // "_id": "$randomFourDigitNumber",
-        "EventName": eventnameTextField.text.trim(),
-        "OrganiserName": organiserNameTextField.text.trim(),
-        // "MobileNumber": mobileNumberTextField.text.trim(),
-        "Date": eventDateString,
-        "BookedFrom": _selectedStartTime.toString(),
-        "BookedTill": _selectedEndTime.toString(),
-        "RoomName": "${widget.floorNumber}-${widget.roomNumber}",
-        "Status": "booked",
+        DBKeys.eventName: _eventnameTextField.text.trim(),
+        DBKeys.guestName: _organiserNameTextField.text.trim(),
+        DBKeys.mobileNumber: _mobileNumberTextField.text.trim(),
+        DBKeys.date: eventDateString,
+        DBKeys.startTime: _selectedStartTime.toString(),
+        DBKeys.endTime: _selectedEndTime.toString(),
+        DBKeys.roomName: widget.roomName,
+        DBKeys.status: RoomStatus.booked,
       };
       if (kDebugMode) {
         print(eventMap);
@@ -431,6 +465,8 @@ class _AddEventPageState extends State<AddEventPage> {
             await ApiService().postData(eventMap);
         if (createdEventMap.isNotEmpty) {
           eventCreated = true;
+          snakbarTextType = SnackbarType.success;
+          snakbarText = "Event created";
           logDebugMsg("$createdEventMap");
           final provider =
               navigatorKey.currentState!.context.read<UserStatusProvider>();
@@ -439,10 +475,16 @@ class _AddEventPageState extends State<AddEventPage> {
       } catch (e) {
         logDebugMsg("error:$e");
       }
-      //TODO create here
       logDebugMsg("Event created: $eventCreated");
     }
+    showSnackBar(context, snakbarText, snakbarTextType);
     return eventCreated;
+  }
+
+  void disposeControllers(List<TextEditingController> list) {
+    for (final controller in list) {
+      controller.dispose();
+    }
   }
 }
 
@@ -450,4 +492,11 @@ void logDebugMsg(String message) {
   if (kDebugMode) {
     debugPrint(message);
   }
+}
+
+void showSnackBar(
+    BuildContext context, String snackbarText, SnackbarType typeOfMessage) {
+  ScaffoldMessenger.of(context).showSnackBar(
+      CustomSnackbar(message: snackbarText, type: typeOfMessage)
+          .build(context));
 }

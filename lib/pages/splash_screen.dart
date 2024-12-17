@@ -19,7 +19,7 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> {
   // Default screen to navigate
-  Widget _nextScreenToNavigate = ChooseUserPage();
+  Widget _nextScreenToNavigate = const ChooseUserPage();
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +65,7 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<Widget> _checkPreferencesAndReturnNextScreen() async {
-    Widget nextScreen = ChooseUserPage();
+    Widget nextScreen = const ChooseUserPage();
     try {
       final prefs = await SharedPreferences.getInstance();
       final bool hasValue = prefs.containsKey('isAdmin');

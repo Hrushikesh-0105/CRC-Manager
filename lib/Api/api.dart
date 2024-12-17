@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  final String baseUrl = 'http://172.25.109.204:5500/booking';
-  final String loginUrl = 'http://172.25.109.204:5500/login';
+  final String baseUrl = 'https://crc-manager-backend.onrender.com/booking';
+  final String loginUrl = 'https://crc-manager-backend.onrender.com/login';
 
   // GET request
   Future<List<Map<String, dynamic>>?> getData(
@@ -19,12 +19,13 @@ class ApiService {
       if (response.statusCode == 200) {
         debugPrint("Raw Response: ${response.body}");
         final data = jsonDecode(response.body);
-        print(data);
         dataList = (data as List).map((item) {
           return item
               as Map<String, dynamic>; // Cast each item to Map<String, dynamic>
         }).toList();
-        print(dataList.runtimeType);
+      } else if (response.statusCode == 404) {
+        debugPrint("Data not found");
+        dataList = []; //no data
       } else {
         debugPrint("Failed to fetch data: ${response.statusCode}");
       }
@@ -115,13 +116,6 @@ class ApiService {
 
   // PATCH request to update booking status
   Future<bool> updateBookingStatus(String id, String newStatus) async {
-    // Validate status locally
-    final validStatus = ['booked', 'inUse', 'free'];
-    if (!validStatus.contains(newStatus)) {
-      debugPrint("Invalid status: $newStatus");
-      return false; // Or handle as necessary
-    }
-
     bool isUpdated = false;
     try {
       final url = Uri.parse('$baseUrl/$id/status');

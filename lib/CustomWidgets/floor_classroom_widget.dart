@@ -112,6 +112,7 @@ class _FloorClassroomWidgetState extends State<FloorClassroomWidget> {
         context,
         MaterialPageRoute(
             builder: (context) => EventsPage(
-                floorNumber: widget.floorNumber, roomNumber: roomNumber)));
+                  roomName: "$floorNumber-$roomNumber",
+                )));
   }
 }
