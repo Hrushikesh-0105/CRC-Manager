@@ -1,4 +1,4 @@
-import 'package:crc_app/userStatusProvider/db_keys_room_status.dart';
+import 'package:crc_app/provider/db_keys_room_status.dart';
 import 'package:flutter/material.dart';
 
 class UserStatusProvider extends ChangeNotifier {

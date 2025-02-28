@@ -1,11 +1,10 @@
 import 'package:auto_size_text/auto_size_text.dart';
-import 'package:crc_app/CustomWidgets/floor_classRoom_widget_2.dart';
-import 'package:crc_app/main.dart';
-import 'package:crc_app/pages/about_app_page.dart';
-import 'package:crc_app/pages/choose_user_page.dart';
-import 'package:crc_app/userStatusProvider/user_and_event_provider.dart';
+import 'package:crc_app/widgets/floor_classroom_widget.dart';
+import 'package:crc_app/screens/about_app_page.dart';
+import 'package:crc_app/screens/choose_user_page.dart';
+import 'package:crc_app/provider/controller.dart';
 import 'package:flutter/material.dart';
-import 'package:crc_app/styles.dart';
+import 'package:crc_app/styles/styles.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -23,8 +22,7 @@ class _FloorsPageState extends State<FloorsPage> {
   @override
   void initState() {
     super.initState();
-    final provider =
-        navigatorKey.currentState!.context.read<UserStatusProvider>();
+    final provider = context.read<UserStatusProvider>();
     isAdmin = provider.isAdmin;
   }
 
@@ -90,20 +88,21 @@ class _FloorsPageState extends State<FloorsPage> {
     return IconButton(
         onPressed: () async {
           await removeUserStatusFromPrefsAndProvider();
-          Navigator.pushReplacement(context,
-              MaterialPageRoute(builder: (context) => const ChooseUserPage()));
+          if (context.mounted) {
+            Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const ChooseUserPage()));
+          }
         },
         icon: const Icon(Icons.logout_outlined, color: Colors.white, size: 20));
   }
 
   Future<void> removeUserStatusFromPrefsAndProvider() async {
+    final provider = context.read<UserStatusProvider>();
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('isAdmin');
-    if (mounted && navigatorKey.currentState != null) {
-      final provider =
-          navigatorKey.currentState!.context.read<UserStatusProvider>();
-      provider.updateAdminStatus(false);
-    }
+    provider.updateAdminStatus(false);
   }
 }
 

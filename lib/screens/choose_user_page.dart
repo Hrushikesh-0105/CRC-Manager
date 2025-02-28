@@ -1,9 +1,8 @@
 import 'package:auto_size_text/auto_size_text.dart';
-import 'package:crc_app/main.dart';
-import 'package:crc_app/pages/floors_page.dart';
-import 'package:crc_app/pages/login_page.dart';
-import 'package:crc_app/styles.dart';
-import 'package:crc_app/userStatusProvider/user_and_event_provider.dart';
+import 'package:crc_app/screens/floors_page.dart';
+import 'package:crc_app/screens/login_page.dart';
+import 'package:crc_app/styles/styles.dart';
+import 'package:crc_app/provider/controller.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -84,7 +83,7 @@ class _ChooseUserPageState extends State<ChooseUserPage> {
                   InkWell(
                       onTap: () async {
                         await setUser(false);
-                        if (mounted) {
+                        if (context.mounted) {
                           Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
@@ -103,14 +102,11 @@ class _ChooseUserPageState extends State<ChooseUserPage> {
   }
 
   Future<void> setUser(bool isAdmin) async {
+    final provider = context.read<UserStatusProvider>();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isAdmin', isAdmin);
-    if (mounted && navigatorKey.currentState != null) {
-      final provider =
-          navigatorKey.currentState!.context.read<UserStatusProvider>();
-      provider.updateAdminStatus(isAdmin);
-      logDebugMsg("User: ${provider.isAdmin}");
-    }
+    provider.updateAdminStatus(isAdmin);
+    logDebugMsg("User: ${provider.isAdmin}");
   }
 }
 

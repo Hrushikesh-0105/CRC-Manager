@@ -1,6 +1,6 @@
 import 'package:auto_size_text/auto_size_text.dart';
-import 'package:crc_app/CustomWidgets/profile_card.dart';
-import 'package:crc_app/styles.dart';
+import 'package:crc_app/widgets/profile_card.dart';
+import 'package:crc_app/styles/styles.dart';
 import 'package:flutter/material.dart';
 
 class AboutAppPage extends StatelessWidget {

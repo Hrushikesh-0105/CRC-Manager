@@ -57,7 +57,7 @@ InputDecoration textfieldstyle1({
           borderSide: const BorderSide(color: Color(0xff0e79b2))),
       disabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: prussianBlue)),
+          borderSide: BorderSide(color: Colors.grey.shade700)),
       prefixIcon: Icon(prefixicon, size: 20, color: prussianBlue),
       suffixIcon: suffixIcon);
 }

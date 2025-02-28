@@ -1,12 +1,12 @@
 import 'package:auto_size_text/auto_size_text.dart';
-import 'package:crc_app/CustomWidgets/snack_bar.dart';
+import 'package:crc_app/widgets/snack_bar.dart';
 import 'package:flutter_native_sms/flutter_native_sms.dart';
 import 'package:intl/intl.dart';
 import 'package:crc_app/Api/api.dart';
-import 'package:crc_app/main.dart';
-import 'package:crc_app/userStatusProvider/user_and_event_provider.dart';
-import 'package:crc_app/userStatusProvider/db_keys_room_status.dart';
-import 'package:crc_app/styles.dart';
+// import 'package:crc_app/main.dart';
+import 'package:crc_app/provider/controller.dart';
+import 'package:crc_app/provider/db_keys_room_status.dart';
+import 'package:crc_app/styles/styles.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -88,6 +88,7 @@ class _AddEventPageState extends State<AddEventPage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 TextFormField(
+                  enabled: !_isLoading,
                   controller: _eventnameTextField,
                   inputFormatters: [LengthLimitingTextInputFormatter(20)],
                   decoration: textfieldstyle1(
@@ -106,6 +107,7 @@ class _AddEventPageState extends State<AddEventPage> {
                   height: 12,
                 ),
                 TextFormField(
+                  enabled: !_isLoading,
                   controller: _organiserNameTextField,
                   inputFormatters: [LengthLimitingTextInputFormatter(20)],
                   decoration: textfieldstyle1(
@@ -124,6 +126,7 @@ class _AddEventPageState extends State<AddEventPage> {
                   height: 12,
                 ),
                 TextFormField(
+                  enabled: !_isLoading,
                   controller: _mobileNumberTextField,
                   keyboardType: TextInputType.number,
                   inputFormatters: [
@@ -278,7 +281,7 @@ class _AddEventPageState extends State<AddEventPage> {
                             _isLoading = true;
                           });
                           bool eventCreated = await _createEvent();
-                          if (eventCreated) {
+                          if (eventCreated && context.mounted) {
                             Navigator.pop(context);
                           } else {
                             setState(() {
@@ -432,6 +435,7 @@ class _AddEventPageState extends State<AddEventPage> {
   }
 
   Future<bool> _createEvent() async {
+    final provider = context.read<UserStatusProvider>();
     String snakbarText = "Failed to create event";
     SnackbarType snakbarTextType = SnackbarType.error;
     bool eventCreated = false;
@@ -456,14 +460,12 @@ class _AddEventPageState extends State<AddEventPage> {
       }
       try {
         Map<String, dynamic> createdEventMap =
-            await ApiService().postData(eventMap);
+            await ApiService.postData(eventMap);
         if (createdEventMap.isNotEmpty) {
           eventCreated = true;
           snakbarTextType = SnackbarType.success;
           snakbarText = "Event created";
           logDebugMsg("$createdEventMap");
-          final provider =
-              navigatorKey.currentState!.context.read<UserStatusProvider>();
           provider.addEventData(createdEventMap);
           await sendSms(createdEventMap);
         }

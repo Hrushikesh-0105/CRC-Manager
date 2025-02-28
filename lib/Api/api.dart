@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  final String baseUrl = ApiSecrets.baseUrl;
-  final String loginUrl = ApiSecrets.loginUrl;
+  static const String baseUrl = ApiSecrets.baseUrl;
+  static const String loginUrl = ApiSecrets.loginUrl;
 
   // GET request
-  Future<List<Map<String, dynamic>>?> getData(
+  static Future<List<Map<String, dynamic>>?> getData(
       String roomName, String date) async {
     List<Map<String, dynamic>>? dataList;
     try {
@@ -37,7 +37,8 @@ class ApiService {
   }
 
   // POST request
-  Future<Map<String, dynamic>> postData(Map<String, dynamic> body) async {
+  static Future<Map<String, dynamic>> postData(
+      Map<String, dynamic> body) async {
     Map<String, dynamic> dataMap = {};
     try {
       final response = await http.post(
@@ -64,7 +65,7 @@ class ApiService {
   }
 
   // DELETE request
-  Future<bool> deleteData(String id) async {
+  static Future<bool> deleteData(String id) async {
     bool deleted = false;
     try {
       final response = await http.delete(Uri.parse('$baseUrl/delete/$id'));
@@ -83,7 +84,8 @@ class ApiService {
     return deleted;
   }
 
-  Future<int> authenticateLogin(String mobileNumber, String password) async {
+  static Future<int> authenticateLogin(
+      String mobileNumber, String password) async {
     Map<String, dynamic> body = {
       "username": mobileNumber,
       "password": password
@@ -116,7 +118,7 @@ class ApiService {
   }
 
   // PATCH request to update booking status
-  Future<bool> updateBookingStatus(String id, String newStatus) async {
+  static Future<bool> updateBookingStatus(String id, String newStatus) async {
     bool isUpdated = false;
     try {
       final url = Uri.parse('$baseUrl/$id/status');

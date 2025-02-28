@@ -1,6 +1,6 @@
 import 'package:auto_size_text/auto_size_text.dart';
-import 'package:crc_app/pages/events_page.dart';
-import 'package:crc_app/styles.dart';
+import 'package:crc_app/screens/events_page.dart';
+import 'package:crc_app/styles/styles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable_panel/flutter_slidable_panel.dart';
 

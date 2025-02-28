@@ -1,17 +1,16 @@
 import 'dart:async';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:crc_app/Api/api.dart';
-import 'package:crc_app/CustomWidgets/calandar_widget.dart';
-import 'package:crc_app/CustomWidgets/dates_widget.dart';
-import 'package:crc_app/CustomWidgets/legend.dart';
-import 'package:crc_app/CustomWidgets/network_error_widget.dart';
-import 'package:crc_app/CustomWidgets/no_events_widget.dart';
-import 'package:crc_app/CustomWidgets/snack_bar.dart';
-import 'package:crc_app/main.dart';
-import 'package:crc_app/pages/add_event_page.dart';
-import 'package:crc_app/styles.dart';
-import 'package:crc_app/userStatusProvider/db_keys_room_status.dart';
-import 'package:crc_app/userStatusProvider/user_and_event_provider.dart';
+import 'package:crc_app/widgets/calandar_widget.dart';
+import 'package:crc_app/widgets/dates_widget.dart';
+import 'package:crc_app/widgets/legend.dart';
+import 'package:crc_app/widgets/network_error_widget.dart';
+import 'package:crc_app/widgets/no_events_widget.dart';
+import 'package:crc_app/widgets/snack_bar.dart';
+import 'package:crc_app/screens/add_event_page.dart';
+import 'package:crc_app/styles/styles.dart';
+import 'package:crc_app/provider/db_keys_room_status.dart';
+import 'package:crc_app/provider/controller.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -64,8 +63,7 @@ class _EventsPageState extends State<EventsPage> {
   void initState() {
     super.initState();
     updateDateMap();
-    final provider =
-        navigatorKey.currentState!.context.read<UserStatusProvider>();
+    final provider = context.read<UserStatusProvider>();
     isAdmin = provider.isAdmin;
     isLoading = true;
     loadData(context);
@@ -139,7 +137,9 @@ class _EventsPageState extends State<EventsPage> {
                       setState(() {
                         isLoading = true;
                       });
-                      await loadData(context);
+                      if (context.mounted) {
+                        await loadData(context);
+                      }
                     },
                     icon: Icon(
                       Icons.calendar_month_outlined,
@@ -174,7 +174,9 @@ class _EventsPageState extends State<EventsPage> {
                         setState(() {
                           isLoading = true;
                         });
-                        await loadData(context);
+                        if (context.mounted) {
+                          await loadData(context);
+                        }
                       },
                       splashColor: Colors.transparent,
                       highlightColor: Colors.transparent,
@@ -253,16 +255,17 @@ class _EventsPageState extends State<EventsPage> {
     logDebugMsg("Loading data");
     String snackbarText = "Network Error";
     //!Data related
-    final provider =
-        navigatorKey.currentState!.context.read<UserStatusProvider>();
+    // final provider =
+    // navigatorKey.currentState!.context.read<UserStatusProvider>();
+    final provider = context.read<UserStatusProvider>();
     provider.clearEvents();
     currentEventTimes.clear();
     String eventDateString = DateFormat('yyyy-MM-dd').format(currentDate);
     try {
       const timeoutDuration = Duration(seconds: 15);
-      List<Map<String, dynamic>>? fetchedData = await ApiService()
-          .getData(widget.roomName, eventDateString)
-          .timeout(timeoutDuration, onTimeout: () {
+      List<Map<String, dynamic>>? fetchedData =
+          await ApiService.getData(widget.roomName, eventDateString)
+              .timeout(timeoutDuration, onTimeout: () {
         snackbarText = "Connection Timed out";
         throw TimeoutException("Connection timed out");
       });

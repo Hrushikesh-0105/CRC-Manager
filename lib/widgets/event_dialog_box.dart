@@ -1,14 +1,14 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:crc_app/Api/api.dart';
-import 'package:crc_app/CustomWidgets/snack_bar.dart';
-import 'package:crc_app/main.dart';
-import 'package:crc_app/styles.dart';
-import 'package:crc_app/userStatusProvider/user_and_event_provider.dart';
+import 'package:crc_app/widgets/snack_bar.dart';
+// import 'package:crc_app/main.dart';
+import 'package:crc_app/styles/styles.dart';
+import 'package:crc_app/provider/controller.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:crc_app/userStatusProvider/db_keys_room_status.dart';
+import 'package:crc_app/provider/db_keys_room_status.dart';
 
 class EventDialogBox extends StatefulWidget {
   final Map<String, dynamic> currentEventMap;
@@ -80,7 +80,7 @@ class _EventDialogBoxState extends State<EventDialogBox> {
                               _isLoading = true;
                             });
                             bool eventDeleted = await deleteEvent(currentId);
-                            if (eventDeleted) {
+                            if (eventDeleted && context.mounted) {
                               Navigator.pop(context);
                             } else {
                               setState(() {
@@ -214,7 +214,7 @@ class _EventDialogBoxState extends State<EventDialogBox> {
                                   widget.currentEventMap[DBKeys.id],
                                   otpTextField.text.trim(),
                                   currentOTP);
-                              if (otpVerified) {
+                              if (otpVerified && context.mounted) {
                                 Navigator.pop(context);
                               } else {
                                 setState(() {
@@ -248,7 +248,7 @@ class _EventDialogBoxState extends State<EventDialogBox> {
                         });
                         bool keysReturned =
                             await returnKeys(widget.currentEventMap[DBKeys.id]);
-                        if (keysReturned) {
+                        if (keysReturned && context.mounted) {
                           Navigator.pop(context);
                         } else {
                           setState(() {
@@ -291,6 +291,7 @@ class _EventDialogBoxState extends State<EventDialogBox> {
   }
 
   Future<bool> deleteEvent(String id) async {
+    final provider = context.read<UserStatusProvider>();
     SnackbarType snakbarTextType = SnackbarType.error;
     bool eventDeleted;
     String snakbarText = "Failed to delete";
@@ -298,10 +299,8 @@ class _EventDialogBoxState extends State<EventDialogBox> {
       logDebugMsg(id);
     }
     try {
-      eventDeleted = await ApiService().deleteData(id);
+      eventDeleted = await ApiService.deleteData(id);
       if (eventDeleted) {
-        final provider =
-            navigatorKey.currentState!.context.read<UserStatusProvider>();
         provider.deleteEventDataById(id);
         logDebugMsg("Deleted successfully");
         snakbarText = "Event deleted";
@@ -319,16 +318,15 @@ class _EventDialogBoxState extends State<EventDialogBox> {
   }
 
   Future<bool> verifyOtp(String id, String enteredOtp, String actualOtp) async {
+    final provider = context.read<UserStatusProvider>();
     SnackbarType snakbarTextType = SnackbarType.error;
     bool verified = false;
     String snakbarText = "Wrong Otp";
     if (enteredOtp == actualOtp) {
       logDebugMsg("Otp verified");
       try {
-        verified = await ApiService().updateBookingStatus(id, RoomStatus.inUse);
+        verified = await ApiService.updateBookingStatus(id, RoomStatus.inUse);
         if (verified) {
-          final provider =
-              navigatorKey.currentState!.context.read<UserStatusProvider>();
           provider.updateEventStatusById(id, RoomStatus.inUse);
           snakbarText = "Otp Verified";
         } else {
@@ -345,15 +343,14 @@ class _EventDialogBoxState extends State<EventDialogBox> {
   }
 
   Future<bool> returnKeys(String id) async {
+    final provider = context.read<UserStatusProvider>();
     SnackbarType snakbarTextType = SnackbarType.error;
     bool keysReturned = false;
     String snakbarText = "Keys Not Returned";
     try {
       keysReturned =
-          await ApiService().updateBookingStatus(id, RoomStatus.keysReturned);
+          await ApiService.updateBookingStatus(id, RoomStatus.keysReturned);
       if (keysReturned) {
-        final provider =
-            navigatorKey.currentState!.context.read<UserStatusProvider>();
         provider.updateEventStatusById(id, RoomStatus.keysReturned);
         snakbarText = "Keys Returned";
       }

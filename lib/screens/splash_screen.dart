@@ -1,10 +1,9 @@
 import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:auto_size_text/auto_size_text.dart';
-import 'package:crc_app/main.dart';
-import 'package:crc_app/pages/choose_user_page.dart';
-import 'package:crc_app/pages/floors_page.dart';
-import 'package:crc_app/styles.dart';
-import 'package:crc_app/userStatusProvider/user_and_event_provider.dart';
+import 'package:crc_app/screens/choose_user_page.dart';
+import 'package:crc_app/screens/floors_page.dart';
+import 'package:crc_app/styles/styles.dart';
+import 'package:crc_app/provider/controller.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
@@ -116,12 +115,8 @@ class _SplashScreenState extends State<SplashScreen> {
       }
       if (hasValue && mounted) {
         final isAdmin = prefs.getBool('isAdmin') ?? false;
-        final provider =
-            navigatorKey.currentState?.context.read<UserStatusProvider>();
-
-        if (provider != null) {
-          provider.updateAdminStatus(isAdmin);
-        }
+        final provider = context.read<UserStatusProvider>();
+        provider.updateAdminStatus(isAdmin);
       }
     } catch (e) {
       debugPrint("Error in _checkPreferences function: $e");

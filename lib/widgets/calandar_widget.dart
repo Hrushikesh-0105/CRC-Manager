@@ -1,13 +1,13 @@
 // import 'package:crc_app/Api/api.dart';
-import 'package:crc_app/CustomWidgets/event_dialog_box.dart';
-import 'package:crc_app/main.dart';
-import 'package:crc_app/styles.dart';
-import 'package:crc_app/userStatusProvider/user_and_event_provider.dart';
+import 'package:crc_app/widgets/event_dialog_box.dart';
+// import 'package:crc_app/main.dart';
+import 'package:crc_app/styles/styles.dart';
+import 'package:crc_app/provider/controller.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
-import 'package:crc_app/userStatusProvider/db_keys_room_status.dart';
+import 'package:crc_app/provider/db_keys_room_status.dart';
 
 class CalandarWidget extends StatefulWidget {
   final DateTime currentDate;
@@ -26,8 +26,7 @@ class _CalandarWidgetState extends State<CalandarWidget> {
   @override
   void initState() {
     super.initState();
-    final provider =
-        navigatorKey.currentState!.context.read<UserStatusProvider>();
+    final provider = context.read<UserStatusProvider>();
     isAdmin = provider.isAdmin;
     // logDebugMsg("Events map:  ${widget.eventsMap}");
     createDisplayEventsMap();
