@@ -2,7 +2,7 @@
 
 **A Classroom Booking & Key Handover Solution**
 
-![App Logo](/client/assets/icons/crc_app_icon.jpeg) <!-- Replace with your actual logo path -->
+<img src="/client/assets/icons/crc_app_icon.jpeg" alt="App Logo" width="300"/>
 
 ---
 
@@ -45,7 +45,7 @@ A secure, calendar-based booking app with **Admin** and **Guest** modes:
 
 ### 1️⃣ Choose User Mode
 
-![Choose User Mode](/assets/choose_user.png) <!-- Replace with actual path -->
+<img src="/assets/choose_user.png" alt="Choose User Mode" width="300"/>
 
 Users select **Admin** or **Guest (Guard)** on app launch.
 
@@ -53,7 +53,7 @@ Users select **Admin** or **Guest (Guard)** on app launch.
 
 ### 2️⃣ Admin Login
 
-![Admin Login](/assets/admin_login.png)
+<img src="/assets/admin_login.png" alt="Admin Login" width="300"/>
 
 Admins sign in with phone number & password.
 
@@ -61,9 +61,9 @@ Admins sign in with phone number & password.
 
 ### 3️⃣ Floor & Classroom Selection
 
-![Floor Selection](assets/floor_selection.png)
+<img src="assets/floor_selection.png" alt="Floor Selection" width="300"/>
 
-![Classroom Selection](/assets/classroom_selection.png)
+<img src="/assets/classroom_selection.png" alt="Classroom Selection" width="300"/>
 
 Admin dashboard shows **6 floors**, and each floor has 4 classrooms to choose from.
 
@@ -71,7 +71,7 @@ Admin dashboard shows **6 floors**, and each floor has 4 classrooms to choose fr
 
 ### 4️⃣ Events Calendar
 
-![Events Calendar](/assets/calendar.png)
+<img src="/assets/calendar.png" alt="Events Calendar" width="300"/>
 
 Admins view bookings, pick dates, add or delete events.
 
@@ -79,7 +79,7 @@ Admins view bookings, pick dates, add or delete events.
 
 ### 5️⃣ Create Event
 
-![Create Event](/assets/create_event.png)
+<img src="/assets/create_event.png" alt="Create Event" width="300"/>
 
 Admin adds:
 - Event name
@@ -91,7 +91,7 @@ OTP is generated & sent via local SMS.
 
 ### 📩 OTP Message Sent to Student
 
-![OTP Message](/assets/otp.png)
+<img src="/assets/otp.png" alt="OTP Message" width="300"/>
 
 Once the event is created, the student receives an OTP on their phone.  
 They use this OTP to verify with the guard.
@@ -100,7 +100,7 @@ They use this OTP to verify with the guard.
 
 ### 6️⃣ OTP Verification (Guard)
 
-![OTP Verification](/assets/otp_verification.png)
+<img src="/assets/otp_verification.png" alt="OTP Verification" width="300"/>
 
 Student provides OTP → Guard verifies → Keys are handed over.
 
@@ -108,7 +108,7 @@ Student provides OTP → Guard verifies → Keys are handed over.
 
 ### 7️⃣ Key Return Confirmation
 
-![Key Return](/assets/key_return.png)
+<img src="/assets/key_return.png" alt="Key Return" width="300"/>
 
 Guard marks keys as returned → Classroom marked available.
 
@@ -152,5 +152,3 @@ For internal use only.
 ## 🙌 Acknowledgements
 
 Special thanks to our professors & CRC staff for their support & valuable feedback.
-
----
